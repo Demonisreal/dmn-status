@@ -11,7 +11,8 @@
 
 {{define "main"}}
 <div class="wrap page">
-  <div class="now">
+  {{- /* data-live markiert, was der 60-sekunden-takt austauscht; "so funktioniert's" bleibt stehen */}}
+  <div class="now" data-live>
     <p class="crumb"><a href="{{t .Lang "url.proj"}}">{{t .Lang "crumb.proj"}}</a><span class="sep" aria-hidden="true">/</span><span>Status</span></p>
     <h1>{{if .Targets}}{{template "led" .Overall}}{{end}}<span>{{overall .Lang .Overall .Targets}}</span></h1>
     {{- if .Targets}}
@@ -20,7 +21,7 @@
   </div>
 
   {{- if .Targets}}
-  <section class="blk" id="{{t .Lang "id.svc"}}" aria-labelledby="svc-h">
+  <section class="blk" id="{{t .Lang "id.svc"}}" aria-labelledby="svc-h" data-live>
     <div class="sec-head">
       <h2 id="svc-h">{{t .Lang "svc.h"}}</h2>
       <p class="legend">
@@ -52,7 +53,7 @@
   </section>
   {{- end}}
 
-  <section class="blk" id="{{t .Lang "id.inc"}}" aria-labelledby="inc-h">
+  <section class="blk" id="{{t .Lang "id.inc"}}" aria-labelledby="inc-h" data-live>
     <div class="sec-head">
       <h2 id="inc-h">{{t .Lang "inc.h"}}</h2>
     </div>

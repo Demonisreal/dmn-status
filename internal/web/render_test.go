@@ -192,8 +192,18 @@ func TestHourBars(t *testing.T) {
 	if c.Label != "Letzte 90 Stunden: 88 erreichbar, 1 mit Ausfall, 1 ohne Daten" {
 		t.Errorf("label %q", c.Label)
 	}
-	if c := HourBars(sampleRows("de")[0].Hours[:24], time.Hour, "de"); c.Width != 288 || c.Bars[1].X != 12 {
+	if !strings.Contains(c.Bars[40].Title, "Ausfall") || !strings.Contains(c.Bars[41].Title, "keine Daten") {
+		t.Errorf("titel %q und %q", c.Bars[40].Title, c.Bars[41].Title)
+	}
+	if !c.Dense() {
+		t.Error("90 segmente muessen als dichte leiste gelten")
+	}
+	c = HourBars(sampleRows("de")[0].Hours[:24], time.Hour, "de")
+	if c.Width != 96 || c.Bars[1].X != 4 {
 		t.Errorf("24 segmente: breite %d", c.Width)
+	}
+	if c.Dense() {
+		t.Error("24 segmente sind nicht dicht")
 	}
 }
 
@@ -207,5 +217,8 @@ func TestLatencyLine(t *testing.T) {
 	}
 	if c := LatencyLine([]int{-1, -1}, "de"); c.Line != "" {
 		t.Errorf("ohne messwerte trotzdem linie %q", c.Line)
+	}
+	if c := LatencyLine([]int{140}, "de"); c.Line != "M300.0,15.0h0" {
+		t.Errorf("einzelner messwert: line %q", c.Line)
 	}
 }

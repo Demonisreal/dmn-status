@@ -4,8 +4,9 @@
 
 {{define "main"}}
 <div class="wrap page">
+  {{- /* data-live markiert, was der 60-sekunden-takt austauscht; alles andere bleibt stehen */}}
   {{- with .Target}}
-  <div class="now">
+  <div class="now" data-live>
     <p class="crumb"><a href="{{base $.Lang}}/">Status</a><span class="sep" aria-hidden="true">/</span><span>{{.Name}}</span></p>
     <h1 class="name">{{.Name}}</h1>
     <p class="svc-s" data-state="{{.State}}">{{template "led" .State}}<span class="st">{{t $.Lang (printf "state.%s" .State)}}</span><b class="kind">{{kind .Kind}}</b>
@@ -15,7 +16,7 @@
     {{- end}}
   </div>
 
-  <dl class="ups wide">
+  <dl class="ups wide" data-live>
     <div><dt>{{t $.Lang "up.label"}} {{t $.Lang "up.24h"}}</dt><dd>{{pct $.Lang .Uptime24h}}</dd></div>
     <div><dt>{{t $.Lang "up.label"}} {{t $.Lang "up.7d"}}</dt><dd>{{pct $.Lang .Uptime7d}}</dd></div>
     <div><dt>{{t $.Lang "up.label"}} {{t $.Lang "up.30d"}}</dt><dd>{{pct $.Lang .Uptime30d}}</dd></div>
@@ -31,7 +32,7 @@
     </ul>
   </nav>
 
-  <section class="blk" aria-labelledby="lat-h">
+  <section class="blk" aria-labelledby="lat-h" data-live>
     <div class="sec-head">
       <h2 id="lat-h">{{t .Lang "lat.h"}}</h2>
       {{- if .Latency.Line}}
@@ -42,7 +43,7 @@
     {{- if .Line}}
     <figure class="lat">
       <svg viewBox="0 0 {{.Width}} {{.Height}}" preserveAspectRatio="none" role="img" aria-label="{{.Label}}">
-        <line class="grid max" x1="0" y1="15" x2="{{.Width}}" y2="15"/>
+        <line class="grid max" x1="0" y1="{{.MaxY}}" x2="{{.Width}}" y2="{{.MaxY}}"/>
         <line class="grid" x1="0" y1="{{.Height}}" x2="{{.Width}}" y2="{{.Height}}"/>
         <path d="{{.Line}}"/>
       </svg>
@@ -54,7 +55,7 @@
     {{- end}}
   </section>
 
-  <section class="blk" aria-labelledby="avail-h">
+  <section class="blk" aria-labelledby="avail-h" data-live>
     <div class="sec-head">
       <h2 id="avail-h">{{t .Lang "avail.h"}}</h2>
       <p class="legend">
@@ -73,7 +74,7 @@
     {{- end}}
   </section>
 
-  <section class="blk" aria-labelledby="inc-h">
+  <section class="blk" aria-labelledby="inc-h" data-live>
     <div class="sec-head">
       <h2 id="inc-h">{{t .Lang "inc.h"}}</h2>
     </div>
