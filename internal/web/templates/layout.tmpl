@@ -1,0 +1,123 @@
+{{define "layout"}}<!doctype html>
+<html lang="{{.Lang}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{with .Title}}{{.}} · {{end}}DMN Software</title>
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0b0b0d">
+{{- if .Admin}}
+<meta name="robots" content="noindex">
+{{- else}}
+<meta name="description" content="{{t .Lang "meta.desc"}}">
+{{- end}}
+{{- block "head" .}}{{end}}
+<link rel="icon" href="/static/icon.svg?v={{.Version}}" type="image/svg+xml">
+<link rel="stylesheet" href="/static/app.css?v={{.Version}}">
+{{- block "js" .}}{{end}}
+</head>
+<body>
+
+<a class="skip" href="#{{t .Lang "main.id"}}">{{t .Lang "skip"}}</a>
+
+<header class="top">
+  <div class="wrap top-in">
+    {{- if .Admin}}
+    <a class="brand" href="/admin/">
+    {{- else}}
+    <a class="brand" href="{{base .Lang}}/"{{if eq .Path "/" "/en/"}} aria-current="page"{{end}}>
+    {{- end}}
+      <img src="/static/icon.svg?v={{.Version}}" alt="" width="28" height="28">
+      <span>DMN<span class="slash">/</span><span class="soft">Software</span></span>
+    </a>
+    {{- /* sprachwahl steht zweimal: mobil sitzt sie in der markenzeile und muss in der tab-reihenfolge vor der navigation kommen,
+       auf dem desktop rechts aussen wie auf der website. per css ist immer nur eine sichtbar */}}
+    {{- if .AltURL}}
+    <nav class="lang lang-m" aria-label="{{t .Lang "lang.label"}}">{{template "langlinks" .}}</nav>
+    {{- end}}
+    {{- if .Admin}}
+    <nav class="nav" aria-label="Verwaltung">
+      <ul>
+        <li><a href="/admin/"{{if eq .Path "/admin/"}} aria-current="page"{{end}}>Ziele</a></li>
+        <li><a href="/">Statusseite</a></li>
+        {{- if .CSRF}}
+        <li>
+          <form method="post" action="/admin/logout">
+            <input type="hidden" name="csrf" value="{{.CSRF}}">
+            <button type="submit">Abmelden</button>
+          </form>
+        </li>
+        {{- end}}
+      </ul>
+    </nav>
+    {{- else if eq .Path "/admin/login"}}
+    <nav class="nav" aria-label="Verwaltung">
+      <ul>
+        <li><a href="/">Statusseite</a></li>
+      </ul>
+    </nav>
+    {{- else}}
+    <nav class="nav" aria-label="{{t .Lang "nav.label"}}">
+      <ul>
+        {{- block "navsvc" .}}
+        <li><a href="{{base .Lang}}/#{{t .Lang "id.svc"}}">{{t .Lang "nav.svc"}}</a></li>
+        {{- end}}
+        <li><a href="{{base .Lang}}/#{{t .Lang "id.inc"}}">{{t .Lang "nav.inc"}}</a></li>
+        <li><a href="{{base .Lang}}/#{{t .Lang "id.how"}}">{{t .Lang "nav.how"}}</a></li>
+      </ul>
+    </nav>
+    {{- end}}
+    {{- if .AltURL}}
+    <nav class="lang lang-d" aria-label="{{t .Lang "lang.label"}}">{{template "langlinks" .}}</nav>
+    {{- end}}
+  </div>
+</header>
+
+<main id="{{t .Lang "main.id"}}" tabindex="-1">
+{{template "main" .}}
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <p>© DMN Software · Leon</p>
+    <nav aria-label="{{t .Lang "foot.label"}}">
+      <ul>
+        <li><a href="{{t .Lang "url.imp"}}">{{t .Lang "foot.imp"}}</a></li>
+        <li><a href="{{t .Lang "url.priv"}}">{{t .Lang "foot.priv"}}</a></li>
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+{{end}}
+
+{{define "langlinks"}}
+      {{- if eq .Lang "en"}}
+      <a href="{{.AltURL}}" hreflang="de" lang="de">DE</a>
+      <span aria-hidden="true">·</span>
+      <a href="{{.Path}}" hreflang="en" lang="en" aria-current="true">EN</a>
+      {{- else}}
+      <a href="{{.Path}}" hreflang="de" lang="de" aria-current="true">DE</a>
+      <span aria-hidden="true">·</span>
+      <a href="{{.AltURL}}" hreflang="en" lang="en">EN</a>
+      {{- end}}
+    {{end}}
+
+{{define "erricon"}}<svg class="ic" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.8v3.6M8 10.9v.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>{{end}}
+
+{{define "led"}}<span class="led" data-state="{{.}}"></span>{{end}}
+
+{{define "bars"}}<svg class="hours" viewBox="0 0 {{.Width}} {{.Height}}" preserveAspectRatio="none" role="img" aria-label="{{.Label}}">
+  {{- range .Bars}}<rect class="{{.Class}}" x="{{.X}}" y="{{.Y}}" width="{{.W}}" height="{{.H}}"><title>{{.Title}}</title></rect>{{end -}}
+</svg>{{end}}
+
+{{define "incs"}}<ol class="inc">
+  {{- range .Incidents}}
+  <li>
+    <p class="inc-t"><a href="{{base $.Lang}}/ziel/{{.TargetID}}">{{.TargetName}}</a>{{if .EndedAt}}<b class="tag">{{t $.Lang "inc.done"}}</b>{{else}}<b class="tag live">{{t $.Lang "inc.live"}}</b>{{end}}</p>
+    <p class="inc-m">{{if .EndedAt}}{{span $.Lang .StartedAt .EndedAt}}{{else}}{{tf $.Lang "inc.since" (when $.Lang .StartedAt)}}{{end}}<span class="dur">{{dur $.Lang .Duration}}</span></p>
+  </li>
+  {{- end}}
+</ol>{{end}}

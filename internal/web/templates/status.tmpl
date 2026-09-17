@@ -1,0 +1,144 @@
+{{define "js"}}
+<script src="/static/refresh.js?v={{.Version}}" defer></script>
+{{- end}}
+
+{{/* ohne ziele gibt es die dienste-section nicht, der anker liefe ins leere */}}
+{{define "navsvc"}}
+{{- if .Targets}}
+        <li><a href="{{base .Lang}}/#{{t .Lang "id.svc"}}">{{t .Lang "nav.svc"}}</a></li>
+{{- end}}
+{{- end}}
+
+{{define "main"}}
+<div class="wrap page">
+  <div class="now">
+    <p class="crumb"><a href="{{t .Lang "url.proj"}}">{{t .Lang "crumb.proj"}}</a><span class="sep" aria-hidden="true">/</span><span>Status</span></p>
+    <h1>{{if .Targets}}{{template "led" .Overall}}{{end}}<span>{{overall .Lang .Overall .Targets}}</span></h1>
+    {{- if .Targets}}
+    <p class="stand">{{stand .Lang .CheckedAt}}</p>
+    {{- end}}
+  </div>
+
+  {{- if .Targets}}
+  <section class="blk" id="{{t .Lang "id.svc"}}" aria-labelledby="svc-h">
+    <div class="sec-head">
+      <h2 id="svc-h">{{t .Lang "svc.h"}}</h2>
+      <p class="legend">
+        <span><i class="sw sw-up"></i>{{t .Lang "leg.up"}}</span>
+        <span><i class="sw sw-down"></i>{{t .Lang "leg.down"}}</span>
+        <span><i class="sw sw-none"></i>{{t .Lang "leg.none"}}</span>
+        <span>{{t .Lang "svc.note"}}</span>
+      </p>
+    </div>
+    <ol class="svc">
+      {{- range .Targets}}
+      <li>
+        <div class="svc-h">
+          <h3 class="svc-n"><a href="{{base $.Lang}}/ziel/{{.ID}}">{{.Name}}</a><b class="kind">{{kind .Kind}}</b></h3>
+          <p class="svc-s" data-state="{{.State}}">{{template "led" .State}}<span class="st">{{t $.Lang (printf "state.%s" .State)}}</span>
+            {{- with .Players}}<span class="fm">{{tf $.Lang "players" .Count .Max}}{{if .Version}} · {{tf $.Lang "version" .Version}}{{end}}</span>{{end}}</p>
+        </div>
+        {{- if .Spark.Bars}}
+        {{template "bars" .Spark}}
+        {{- end}}
+        <dl class="ups">
+          <div><dt><span class="vh">{{t $.Lang "up.label"}} </span>{{t $.Lang "up.24h"}}</dt><dd>{{pct $.Lang .Uptime24h}}</dd></div>
+          <div><dt><span class="vh">{{t $.Lang "up.label"}} </span>{{t $.Lang "up.7d"}}</dt><dd>{{pct $.Lang .Uptime7d}}</dd></div>
+          <div><dt><span class="vh">{{t $.Lang "up.label"}} </span>{{t $.Lang "up.30d"}}</dt><dd>{{pct $.Lang .Uptime30d}}</dd></div>
+        </dl>
+      </li>
+      {{- end}}
+    </ol>
+  </section>
+  {{- end}}
+
+  <section class="blk" id="{{t .Lang "id.inc"}}" aria-labelledby="inc-h">
+    <div class="sec-head">
+      <h2 id="inc-h">{{t .Lang "inc.h"}}</h2>
+    </div>
+    {{- if .Incidents}}
+    {{template "incs" .}}
+    {{- else}}
+    <p class="empty">{{t .Lang "inc.none"}}</p>
+    {{- end}}
+  </section>
+
+  <section class="blk" id="{{t .Lang "id.how"}}" aria-labelledby="how-h">
+    <div class="sec-head">
+      <h2 id="how-h">{{t .Lang "how.h"}}</h2>
+      <p>{{t .Lang "how.lead"}}</p>
+    </div>
+    <div class="how">
+      <figure class="arch">
+        <svg class="arch-h" viewBox="0 0 680 214" role="group" aria-labelledby="arch-cap">
+          <path class="wire" d="M171 24H255M425 24H509M594 47V97M594 72H340V97M255 120H171M594 143V167"/>
+          <rect x="1" y="1" width="170" height="46" rx="4"/>
+          <text x="13" y="20">{{t .Lang "arch.targets"}}</text>
+          <text class="sub" x="13" y="38">http · tcp · fivem</text>
+          <rect x="255" y="1" width="170" height="46" rx="4"/>
+          <text x="267" y="20">Scheduler</text>
+          <text class="sub" x="267" y="38">{{t .Lang "arch.sched"}}</text>
+          <rect x="509" y="1" width="170" height="46" rx="4"/>
+          <text x="521" y="20">Checks</text>
+          <text class="sub" x="521" y="38">{{t .Lang "arch.checks"}}</text>
+          <rect x="1" y="97" width="170" height="46" rx="4"/>
+          <text x="13" y="116">{{t .Lang "arch.page"}}</text>
+          <text class="sub" x="13" y="134">html/template</text>
+          <rect x="255" y="97" width="170" height="46" rx="4"/>
+          <text x="267" y="116">SQLite</text>
+          <text class="sub" x="267" y="134">{{t .Lang "arch.db"}}</text>
+          <rect x="509" y="97" width="170" height="46" rx="4"/>
+          <text x="521" y="116">{{t .Lang "arch.inc"}}</text>
+          <text class="sub" x="521" y="134">{{t .Lang "arch.inc.sub"}}</text>
+          <rect x="509" y="167" width="170" height="46" rx="4"/>
+          <text x="521" y="186">Mail</text>
+          <text class="sub" x="521" y="204">{{t .Lang "arch.mail"}}</text>
+        </svg>
+        <svg class="arch-v" viewBox="0 0 340 342" role="group" aria-labelledby="arch-cap">
+          <path class="wire" d="M170 47V71M170 117V141M170 187V206M81 206H259M81 206V225M259 206V225M81 271V295M259 271V295"/>
+          <rect x="1" y="1" width="338" height="46" rx="4"/>
+          <text x="13" y="20">{{t .Lang "arch.targets"}}</text>
+          <text class="sub" x="13" y="38">http · tcp · fivem</text>
+          <rect x="1" y="71" width="338" height="46" rx="4"/>
+          <text x="13" y="90">Scheduler</text>
+          <text class="sub" x="13" y="108">{{t .Lang "arch.sched"}}</text>
+          <rect x="1" y="141" width="338" height="46" rx="4"/>
+          <text x="13" y="160">Checks</text>
+          <text class="sub" x="13" y="178">{{t .Lang "arch.checks"}}</text>
+          <rect x="1" y="225" width="160" height="46" rx="4"/>
+          <text x="9" y="244">SQLite</text>
+          <text class="sub" x="9" y="262">{{t .Lang "arch.db"}}</text>
+          <rect x="179" y="225" width="160" height="46" rx="4"/>
+          <text x="187" y="244">{{t .Lang "arch.inc"}}</text>
+          <text class="sub" x="187" y="262">{{t .Lang "arch.inc.sub"}}</text>
+          <rect x="1" y="295" width="160" height="46" rx="4"/>
+          <text x="9" y="314">{{t .Lang "arch.page"}}</text>
+          <text class="sub" x="9" y="332">html/template</text>
+          <rect x="179" y="295" width="160" height="46" rx="4"/>
+          <text x="187" y="314">Mail</text>
+          <text class="sub" x="187" y="332">{{t .Lang "arch.mail"}}</text>
+        </svg>
+        <figcaption id="arch-cap">{{t .Lang "how.cap"}}</figcaption>
+      </figure>
+      <dl class="tech-list">
+        <div>
+          <dt>{{t .Lang "how.checks.t"}}</dt>
+          <dd>{{t .Lang "how.checks"}}</dd>
+        </div>
+        <div>
+          <dt>{{t .Lang "how.sched.t"}}</dt>
+          <dd>{{t .Lang "how.sched"}}</dd>
+        </div>
+        <div>
+          <dt>{{t .Lang "how.inc.t"}}</dt>
+          <dd>{{t .Lang "how.inc"}}</dd>
+        </div>
+        <div>
+          <dt>{{t .Lang "how.sec.t"}}</dt>
+          <dd>{{t .Lang "how.sec"}}</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+</div>
+{{end}}

@@ -1,0 +1,18 @@
+{
+  "enhancedHostSupport": true,
+  "resources": [
+    "mapmanager",
+    "chat",
+    "spawnmanager",
+    "sessionmanager",
+    "basic-gamemode",
+    "hardcap",
+    "example_garage"
+  ],
+  "server": "FXServer-master SERVER v1.0.0.7290 linux",
+  "vars": {
+    "sv_enforceGameBuild": "2944",
+    "sv_maxClients": "64",
+    "sv_projectName": "Beispiel Roleplay"
+  }
+}

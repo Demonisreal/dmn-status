@@ -1,0 +1,73 @@
+{{define "main"}}
+<div class="wrap page">
+  <div class="adm-head">
+    <h1>Ziele</h1>
+    <div class="acts">
+      <form method="post" action="/admin/testmail">
+        <input type="hidden" name="csrf" value="{{.CSRF}}">
+        <button class="btn" type="submit"{{if not .MailOK}} disabled aria-describedby="mail-note"{{end}}>Testmail senden</button>
+      </form>
+      {{- if .Targets}}
+      <a class="send" href="/admin/ziel/neu">Ziel anlegen</a>
+      {{- end}}
+    </div>
+  </div>
+
+  {{- if and .Flash (or .MailOK (ne .Flash (t "de" "adm.mail.off")))}}
+  {{- if .FlashWarn}}
+  <p class="note warn" role="alert">{{template "erricon"}}<span>{{.Flash}}</span></p>
+  {{- else}}
+  <p class="note" role="status">{{.Flash}}</p>
+  {{- end}}
+  {{- end}}
+  {{- if not .MailOK}}
+  <p class="note warn" id="mail-note">{{template "erricon"}}<span>Mailversand ist nicht eingerichtet. Ausfälle werden erkannt, aber nicht per Mail gemeldet.</span></p>
+  {{- end}}
+
+  {{- if .Targets}}
+  <div class="adm-cols" aria-hidden="true">
+    <span>Zustand</span><span>Ziel</span><span>Adresse und letzte Prüfung</span><span>Aktionen</span>
+  </div>
+  <ul class="adm">
+    {{- range .Targets}}
+    <li>
+      <p class="adm-n"><a href="/admin/ziel/{{.ID}}">{{.Name}}</a><b class="kind">{{kind .Kind}}</b>{{if .Public}}<b class="tag">öffentlich</b>{{else}}<b class="tag">intern</b>{{end}}</p>
+      <p class="adm-s svc-s" data-state="{{if .Paused}}paused{{else}}{{.State}}{{end}}">
+        {{- if .Paused}}{{template "led" "paused"}}<span class="st">pausiert</span>
+        {{- else}}{{template "led" .State}}<span class="st">{{t "de" (printf "state.%s" .State)}}</span>{{end}}</p>
+      <div class="adm-a">
+        <code>{{.Address}}</code>
+        <p>{{if .LastCheck.IsZero}}noch nicht geprüft{{else}}zuletzt {{when "de" .LastCheck}}{{if .LatencyMs}} · {{.LatencyMs}} ms{{end}}{{end}}</p>
+        {{- with .LastError}}
+        <p class="adm-e">{{.}}</p>
+        {{- end}}
+      </div>
+      <div class="adm-x">
+        <form method="post" action="/admin/ziel/{{.ID}}/pause">
+          <input type="hidden" name="csrf" value="{{$.CSRF}}">
+          <button class="btn" type="submit">{{if .Paused}}Fortsetzen{{else}}Pausieren{{end}}<span class="vh">: {{.Name}}</span></button>
+        </form>
+        <form method="post" action="/admin/ziel/{{.ID}}/pruefen">
+          <input type="hidden" name="csrf" value="{{$.CSRF}}">
+          <button class="btn" type="submit">Prüfen<span class="vh">: {{.Name}}</span></button>
+        </form>
+        <a class="btn" href="/admin/ziel/{{.ID}}">Bearbeiten<span class="vh">: {{.Name}}</span></a>
+        <details class="del">
+          <summary class="btn">Löschen<span class="vh">: {{.Name}}</span></summary>
+          <form method="post" action="/admin/ziel/{{.ID}}/loeschen">
+            <input type="hidden" name="csrf" value="{{$.CSRF}}">
+            <button class="btn warn" type="submit">Endgültig löschen</button>
+          </form>
+        </details>
+      </div>
+    </li>
+    {{- end}}
+  </ul>
+  {{- else}}
+  <div class="none">
+    <p>Noch keine Ziele angelegt.</p>
+    <a class="send" href="/admin/ziel/neu">Ziel anlegen</a>
+  </div>
+  {{- end}}
+</div>
+{{end}}

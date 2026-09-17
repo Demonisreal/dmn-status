@@ -1,0 +1,55 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - govet
+    - staticcheck
+    - errcheck
+    - gosec
+    - ineffassign
+    - unused
+    - revive
+    - depguard
+  settings:
+    errcheck:
+      exclude-functions:
+        # nur als defer benutzt: nach dem commit kommt ErrTxDone, sonst zaehlt der erste fehler
+        - (*database/sql.Tx).Rollback
+        # client ist weg, ein status laesst sich dann auch nicht mehr senden
+        - (net/http.ResponseWriter).Write
+    gosec:
+      excludes:
+        # ungepruefte fehler deckt errcheck ab, mit den ausnahmen oben
+        - G104
+    revive:
+      rules:
+        # kein doc-kommentar-zwang fuer exportierte namen
+        - name: exported
+          disabled: true
+    depguard:
+      rules:
+        main:
+          list-mode: lax
+          # nur nicht-test-dateien pruefen, smtptest/testutil sind fuer echten code nicht gedacht
+          files:
+            - "!$test"
+          deny:
+            - pkg: github.com/Demonisreal/dmn-status/internal/alert/smtptest
+              desc: nur in _test.go
+            - pkg: github.com/Demonisreal/dmn-status/internal/testutil
+              desc: nur in _test.go
+  exclusions:
+    presets:
+      - std-error-handling
+    rules:
+      # feste testdaten, golden files und platzhalter-passwoerter
+      - path: _test\.go
+        linters:
+          - gosec
+        text: "G101|G304|G306"
+      # ein schreibfehler zeigt sich beim naechsten ReadLine, dann endet serve ohnehin
+      - path: internal/alert/smtptest/server\.go
+        linters:
+          - errcheck
+        text: 'tc\.PrintfLine'
