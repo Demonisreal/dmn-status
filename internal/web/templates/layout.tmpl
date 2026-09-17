@@ -109,7 +109,7 @@
 
 {{define "led"}}<span class="led" data-state="{{.}}"></span>{{end}}
 
-{{define "bars"}}<svg class="hours" viewBox="0 0 {{.Width}} {{.Height}}" preserveAspectRatio="none" role="img" aria-label="{{.Label}}">
+{{define "bars"}}<svg class="hours{{if .Dense}} dense{{end}}" viewBox="0 0 {{.Width}} {{.Height}}" preserveAspectRatio="none" role="img" aria-label="{{.Label}}">
   {{- range .Bars}}<rect class="{{.Class}}" x="{{.X}}" y="{{.Y}}" width="{{.W}}" height="{{.H}}"><title>{{.Title}}</title></rect>{{end -}}
 </svg>{{end}}
 
