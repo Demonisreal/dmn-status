@@ -512,11 +512,12 @@ a:focus-visible {
   box-shadow: inset 0 0 0 1.5px var(--muted);
 }
 
+/* --line kommt auf --dark nur auf 2:1, der rahmen verschwindet dann fast; --muted wie beim knopf */
 .kind,
 .tag {
   flex: none;
   padding: 0 .4em;
-  border: 1px solid var(--line);
+  border: 1px solid var(--muted);
   border-radius: 4px;
   color: var(--text);
   font: 500 .75rem/1.5 var(--mono);
@@ -658,12 +659,25 @@ a:focus-visible {
   height: 1.75rem;
 }
 
-.bar-up { fill: var(--muted); }
-.bar-down { fill: var(--red-hi); }
-.bar-none { fill: var(--line); }
+.hours rect { fill: currentColor; }
+
+.bar-up { color: var(--muted); }
+.bar-down { color: var(--red-hi); }
+.bar-none { color: var(--line); }
+
+/* 90 segmente auf 320 px: die luecke von einem viertel schritt liest sich dort als zaun.
+   der strich in der fuellfarbe holt die zellen wieder zusammen und bleibt dank
+   non-scaling-stroke unabhaengig davon, wie weit das svg gestreckt wird */
+@media (max-width: 47.99rem) {
+  .hours.dense rect {
+    stroke: currentColor;
+    stroke-width: .5px;
+    vector-effect: non-scaling-stroke;
+  }
+}
 
 @media (hover: hover) and (pointer: fine) {
-  .hours rect:hover { fill: var(--white); }
+  .hours rect:hover { color: var(--white); }
 }
 
 .ups {
@@ -814,8 +828,10 @@ a:focus-visible {
   vector-effect: non-scaling-stroke;
 }
 
+/* --edge ist als flaechentrenner gedacht und geht im diagramm unter, die linien liegen
+   wie die draehte der architektur-skizze auf --line */
 .lat .grid {
-  stroke: var(--edge);
+  stroke: var(--line);
   vector-effect: non-scaling-stroke;
 }
 
@@ -1472,6 +1488,18 @@ fieldset {
 
 .del form { display: block; }
 .del .btn.warn { margin-top: .375rem; }
+
+/* sobald die knopfreihe nebeneinander steht, kommt die bestaetigung daneben statt darunter,
+   sonst waechst die zeile beim aufklappen und die liste darunter springt */
+@media (min-width: 40rem) {
+  .del {
+    display: flex;
+    align-items: flex-start;
+    gap: .375rem;
+  }
+
+  .del .btn.warn { margin-top: 0; }
+}
 
 .none {
   display: grid;

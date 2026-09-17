@@ -7,28 +7,23 @@ import (
 	"time"
 )
 
-// Segment 3 breit plus 1 luecke. Das svg wird ohne seitenverhaeltnis gestreckt, die
-// luecke waechst also mit und bleibt auch bei 360px sichtbar. Bei hoechstens 30 zellen
-// (24 h, 30 tage) wuerde die luecke auf dem desktop so breit wie ein halbes segment,
-// dort ist sie nur 1/12.
+// Segment 3 breit plus 1 luecke, fuer jede zellenzahl gleich. Das svg wird ohne
+// seitenverhaeltnis gestreckt: 24 stunden, 30 tage und 90 stunden sind damit dasselbe
+// material in verschiedener zoomstufe. Schmal holt css die luecke der dichten leiste zurueck.
 const (
-	barStep     = 4
-	barStepWide = 12
-	barHeight   = 24
-	barStub     = 4
+	barStep   = 4
+	barsWide  = 30
+	barHeight = 24
+	barStub   = 4
 )
 
 // HourBars baut die leiste aus stunden- oder tageszellen, step ist die laenge einer zelle.
 // Ohne daten gibt es nur einen stummel am boden, damit das nicht allein an der farbe haengt.
 func HourBars(cells []HourCell, step time.Duration, lang string) Chart {
-	w := barStep
-	if len(cells) <= 30 {
-		w = barStepWide
-	}
-	c := Chart{Width: len(cells) * w, Height: barHeight, Bars: make([]Bar, 0, len(cells))}
+	c := Chart{Width: len(cells) * barStep, Height: barHeight, Bars: make([]Bar, 0, len(cells))}
 	var up, down, none int
 	for i, cell := range cells {
-		b := Bar{X: float64(i * w), W: float64(w - 1), H: barHeight, State: cell.State}
+		b := Bar{X: float64(i * barStep), W: barStep - 1, H: barHeight, State: cell.State}
 		switch cell.State {
 		case StateUp:
 			b.Y, b.H = barHeight-18, 18
@@ -59,11 +54,19 @@ func barTitle(lang string, cell HourCell, s State, step time.Duration) string {
 	if step >= 24*time.Hour {
 		at = day(lang, cell.Start)
 	}
-	if s == StateUnknown {
+	switch s {
+	case StateUnknown:
 		return at + " · " + T(lang, "bars.none")
+	case StateDown:
+		// die prozentzahl allein liest sich wie ein normaler wert, das wort aus der legende davor
+		return at + " · " + T(lang, "leg.down") + " · " + pct(lang, cell.Uptime)
 	}
 	return at + " · " + pct(lang, cell.Uptime)
 }
+
+// Dense meldet die dichte leiste (90 stunden). Schmal ist dort jede zelle nur wenige pixel
+// breit, css nimmt die luecken dann zurueck.
+func (c Chart) Dense() bool { return len(c.Bars) > barsWide }
 
 func (b Bar) Class() string {
 	switch b.State {
@@ -81,6 +84,9 @@ const (
 	latHeight = 165
 	latTop    = 15
 )
+
+// MaxY ist die hoehe der gestrichelten oberkante; das template soll latTop nicht abschreiben.
+func (c Chart) MaxY() int { return latTop }
 
 // LatencyLine rechnet den pfad fuer das diagramm, gleich verteilt ueber den zeitraum.
 // Werte unter 0 sind schritte ohne messung, dort bricht die linie ab. Ein einzelner
@@ -111,7 +117,8 @@ func LatencyLine(ms []int, lang string) Chart {
 			run = 0
 			continue
 		}
-		x := 0.0
+		// bei nur einem schritt steht der punkt in der mitte des zeitraums, nicht am rand
+		x := float64(latWidth) / 2
 		if len(ms) > 1 {
 			x = float64(i) * latWidth / float64(len(ms)-1)
 		}
