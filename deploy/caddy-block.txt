@@ -1,0 +1,22 @@
+# dmn-status, laeuft im compose-projekt dmn-status auf dem netz status_edge.
+# csp und die uebrigen sicherheitsheader setzt die go-app selbst (internal/web), hier nur
+# hsts - ohne header laeuft der erste aufruf sonst ueber klartext-http.
+status.example.com {
+	# /admin/* enthaelt das csrf-token in der antwort, kompression davon macht die
+	# antwortlaenge zum seitenkanal (breach) - dort lieber unkomprimiert.
+	@compressible {
+		not path /admin/*
+	}
+	encode @compressible zstd gzip
+
+	header Strict-Transport-Security "max-age=31536000"
+
+	@metrics path /metrics
+	respond @metrics 404
+
+	# die app wertet x-forwarded-for nur aus, wenn remoteaddr in TRUSTED_PROXY liegt
+	# (cidr des status_edge-netzes), und nimmt den letzten eintrag - den haengt reverse_proxy
+	# hier selbst an. steht ein cdn-proxy davor, landet dessen ip im login-limit und alle
+	# besucher teilen sich eine sperre, deshalb cdn-proxy fuer diesen host aus.
+	reverse_proxy dmn-status:8080
+}

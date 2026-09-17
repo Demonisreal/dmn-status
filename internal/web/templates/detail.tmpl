@@ -1,0 +1,87 @@
+{{define "js"}}
+<script src="/static/refresh.js?v={{.Version}}" defer></script>
+{{- end}}
+
+{{define "main"}}
+<div class="wrap page">
+  {{- with .Target}}
+  <div class="now">
+    <p class="crumb"><a href="{{base $.Lang}}/">Status</a><span class="sep" aria-hidden="true">/</span><span>{{.Name}}</span></p>
+    <h1 class="name">{{.Name}}</h1>
+    <p class="svc-s" data-state="{{.State}}">{{template "led" .State}}<span class="st">{{t $.Lang (printf "state.%s" .State)}}</span><b class="kind">{{kind .Kind}}</b>
+      {{- with .Players}}<span class="fm">{{tf $.Lang "players" .Count .Max}}{{if .Version}} · {{tf $.Lang "version" .Version}}{{end}}</span>{{end}}</p>
+    {{- if eq .State "paused"}}
+    <p class="note">{{t $.Lang "paused.note"}}</p>
+    {{- end}}
+  </div>
+
+  <dl class="ups wide">
+    <div><dt>{{t $.Lang "up.label"}} {{t $.Lang "up.24h"}}</dt><dd>{{pct $.Lang .Uptime24h}}</dd></div>
+    <div><dt>{{t $.Lang "up.label"}} {{t $.Lang "up.7d"}}</dt><dd>{{pct $.Lang .Uptime7d}}</dd></div>
+    <div><dt>{{t $.Lang "up.label"}} {{t $.Lang "up.30d"}}</dt><dd>{{pct $.Lang .Uptime30d}}</dd></div>
+    <div><dt>{{t $.Lang "lat.latest"}}</dt><dd>{{if .LatencyMs}}{{.LatencyMs}} ms{{else}}–{{end}}</dd></div>
+  </dl>
+  {{- end}}
+
+  <nav class="range" aria-label="{{t .Lang "range.label"}}">
+    <ul>
+      <li><a href="?r=24h"{{if eq .Range "24h"}} aria-current="page"{{end}}>{{t .Lang "range.24h"}}</a></li>
+      <li><a href="?r=7d"{{if eq .Range "7d"}} aria-current="page"{{end}}>{{t .Lang "range.7d"}}</a></li>
+      <li><a href="?r=30d"{{if eq .Range "30d"}} aria-current="page"{{end}}>{{t .Lang "range.30d"}}</a></li>
+    </ul>
+  </nav>
+
+  <section class="blk" aria-labelledby="lat-h">
+    <div class="sec-head">
+      <h2 id="lat-h">{{t .Lang "lat.h"}}</h2>
+      {{- if .Latency.Line}}
+      <p class="mono">{{tf .Lang "lat.max" .Latency.MaxMs}}</p>
+      {{- end}}
+    </div>
+    {{- with .Latency}}
+    {{- if .Line}}
+    <figure class="lat">
+      <svg viewBox="0 0 {{.Width}} {{.Height}}" preserveAspectRatio="none" role="img" aria-label="{{.Label}}">
+        <line class="grid max" x1="0" y1="15" x2="{{.Width}}" y2="15"/>
+        <line class="grid" x1="0" y1="{{.Height}}" x2="{{.Width}}" y2="{{.Height}}"/>
+        <path d="{{.Line}}"/>
+      </svg>
+      <p class="axis"><span>{{t $.Lang (printf "ago.%s" $.Range)}}</span><span>{{t $.Lang "now"}}</span></p>
+    </figure>
+    {{- else}}
+    <p class="empty">{{.Label}}</p>
+    {{- end}}
+    {{- end}}
+  </section>
+
+  <section class="blk" aria-labelledby="avail-h">
+    <div class="sec-head">
+      <h2 id="avail-h">{{t .Lang "avail.h"}}</h2>
+      <p class="legend">
+        <span><i class="sw sw-up"></i>{{t .Lang "leg.up"}}</span>
+        <span><i class="sw sw-down"></i>{{t .Lang "leg.down"}}</span>
+        <span><i class="sw sw-none"></i>{{t .Lang "leg.none"}}</span>
+      </p>
+    </div>
+    {{- if .Target.Spark.Bars}}
+    <figure class="lat">
+      {{template "bars" .Target.Spark}}
+      <p class="axis"><span>{{t .Lang (printf "ago.%s" .Range)}}</span><span>{{t .Lang "now"}}</span></p>
+    </figure>
+    {{- else}}
+    <p class="empty">{{t .Lang "lat.none"}}</p>
+    {{- end}}
+  </section>
+
+  <section class="blk" aria-labelledby="inc-h">
+    <div class="sec-head">
+      <h2 id="inc-h">{{t .Lang "inc.h"}}</h2>
+    </div>
+    {{- if .Incidents}}
+    {{template "incs" .}}
+    {{- else}}
+    <p class="empty">{{t .Lang "inc.none.r"}}</p>
+    {{- end}}
+  </section>
+</div>
+{{end}}

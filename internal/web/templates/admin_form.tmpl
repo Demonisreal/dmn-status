@@ -1,0 +1,124 @@
+{{define "main"}}
+<div class="wrap page">
+  <p class="crumb"><a href="/admin/">Ziele</a><span class="sep" aria-hidden="true">/</span><span>{{if .ID}}{{.Name}}{{else}}Ziel anlegen{{end}}</span></p>
+
+  <form class="sk frm" method="post" action="{{if .ID}}/admin/ziel/{{.ID}}{{else}}/admin/ziel/neu{{end}}">
+    <h1 class="sk-bar">{{if .ID}}Ziel bearbeiten{{else}}Ziel anlegen{{end}}</h1>
+    <div class="frm-in">
+      <input type="hidden" name="csrf" value="{{.CSRF}}">
+      {{- if .Errors}}
+      <p class="err" role="alert">{{template "erricon"}}Bitte die markierten Felder prüfen.</p>
+      {{- end}}
+
+      <div class="field">
+        <label for="f-name">Name</label>
+        <input id="f-name" name="name" value="{{.Name}}" maxlength="60" required
+          {{- with index .Errors "name"}} aria-invalid="true" aria-describedby="f-name-err"{{end}}>
+        {{- with index .Errors "name"}}
+        <p class="err" id="f-name-err">{{template "erricon"}}{{.}}</p>
+        {{- end}}
+      </div>
+
+      <fieldset class="field"{{with index .Errors "kind"}} aria-describedby="f-kind-err"{{end}}>
+        <legend>Art</legend>
+        <div class="opts">
+          <label><input type="radio" name="kind" value="http" required{{if or (eq .Kind "http") (not .Kind)}} checked{{end}}><span><b>HTTP</b>URL mit http:// oder https://. Erwarteter Status und Stichwort gelten nur hier.</span></label>
+          <label><input type="radio" name="kind" value="tcp"{{if eq .Kind "tcp"}} checked{{end}}><span><b>TCP</b>host:port, geprüft wird nur, ob die Verbindung zustande kommt.</span></label>
+          <label><input type="radio" name="kind" value="fivem"{{if eq .Kind "fivem"}} checked{{end}}><span><b>FiveM</b>host:port des FXServers, gelesen werden info.json und players.json.</span></label>
+        </div>
+        {{- with index .Errors "kind"}}
+        <p class="err" id="f-kind-err">{{template "erricon"}}{{.}}</p>
+        {{- end}}
+      </fieldset>
+
+      <div class="field">
+        <label for="f-address">Adresse</label>
+        <input id="f-address" name="address" value="{{.Address}}" maxlength="2000" required autocapitalize="none" spellcheck="false"
+          {{- with index .Errors "address"}} aria-invalid="true" aria-describedby="f-address-err"{{end}}>
+        {{- with index .Errors "address"}}
+        <p class="err" id="f-address-err">{{template "erricon"}}{{.}}</p>
+        {{- end}}
+      </div>
+
+      <fieldset class="grp">
+        <legend>Nur für HTTP</legend>
+        <div class="frm-2">
+          <div class="field">
+            <label for="f-expect">Erwarteter Status</label>
+            <input id="f-expect" name="expect_status" value="{{.ExpectStatus}}" maxlength="100" spellcheck="false" aria-describedby="f-expect-hint{{with index .Errors "expect_status"}} f-expect-err{{end}}"
+              {{- with index .Errors "expect_status"}} aria-invalid="true"{{end}}>
+            <p class="hint" id="f-expect-hint">z. B. 200-399 oder 200,401</p>
+            {{- with index .Errors "expect_status"}}
+            <p class="err" id="f-expect-err">{{template "erricon"}}{{.}}</p>
+            {{- end}}
+          </div>
+          <div class="field">
+            <label for="f-keyword">Stichwort</label>
+            <input id="f-keyword" name="keyword" value="{{.Keyword}}" maxlength="200" aria-describedby="f-keyword-hint{{with index .Errors "keyword"}} f-keyword-err{{end}}"
+              {{- with index .Errors "keyword"}} aria-invalid="true"{{end}}>
+            <p class="hint" id="f-keyword-hint">Optional, muss im Antworttext vorkommen.</p>
+            {{- with index .Errors "keyword"}}
+            <p class="err" id="f-keyword-err">{{template "erricon"}}{{.}}</p>
+            {{- end}}
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="field">
+        <label for="f-connect">Verbinden mit</label>
+        <input id="f-connect" name="connect_to" value="{{.ConnectTo}}" autocapitalize="none" spellcheck="false" aria-describedby="f-connect-hint{{with index .Errors "connect_to"}} f-connect-err{{end}}"
+          {{- with index .Errors "connect_to"}} aria-invalid="true"{{end}}>
+        <p class="hint" id="f-connect-hint">Optional, host:port. Die Verbindung geht dorthin statt zur Adresse aus dem DNS. Nur HTTP und FiveM.</p>
+        {{- with index .Errors "connect_to"}}
+        <p class="err" id="f-connect-err">{{template "erricon"}}{{.}}</p>
+        {{- end}}
+      </div>
+
+      <div class="frm-3">
+        <div class="field">
+          <label for="f-interval">Intervall in s</label>
+          <input id="f-interval" name="interval_s" type="number" inputmode="numeric" min="30" max="86400" value="{{.IntervalS}}" required aria-describedby="f-interval-hint{{with index .Errors "interval_s"}} f-interval-err{{end}}"
+            {{- with index .Errors "interval_s"}} aria-invalid="true"{{end}}>
+          <p class="hint" id="f-interval-hint">30 bis 86400</p>
+          {{- with index .Errors "interval_s"}}
+          <p class="err" id="f-interval-err">{{template "erricon"}}{{.}}</p>
+          {{- end}}
+        </div>
+        <div class="field">
+          <label for="f-timeout">Timeout in ms</label>
+          <input id="f-timeout" name="timeout_ms" type="number" inputmode="numeric" min="500" value="{{.TimeoutMs}}" required aria-describedby="f-timeout-hint{{with index .Errors "timeout_ms"}} f-timeout-err{{end}}"
+            {{- with index .Errors "timeout_ms"}} aria-invalid="true"{{end}}>
+          <p class="hint" id="f-timeout-hint">Ab 500, kürzer als das Intervall</p>
+          {{- with index .Errors "timeout_ms"}}
+          <p class="err" id="f-timeout-err">{{template "erricon"}}{{.}}</p>
+          {{- end}}
+        </div>
+        <div class="field">
+          <label for="f-fails">Fehlschläge bis Vorfall</label>
+          <input id="f-fails" name="fail_threshold" type="number" inputmode="numeric" min="1" max="20" value="{{.FailThreshold}}" required aria-describedby="f-fails-hint{{with index .Errors "fail_threshold"}} f-fails-err{{end}}"
+            {{- with index .Errors "fail_threshold"}} aria-invalid="true"{{end}}>
+          <p class="hint" id="f-fails-hint">1 bis 20, in Folge</p>
+          {{- with index .Errors "fail_threshold"}}
+          <p class="err" id="f-fails-err">{{template "erricon"}}{{.}}</p>
+          {{- end}}
+        </div>
+      </div>
+
+      <div class="check">
+        <input id="f-public" name="public" type="checkbox" value="1"{{if .Public}} checked{{end}} aria-describedby="f-public-hint">
+        <label for="f-public">Öffentlich anzeigen</label>
+        <p class="hint" id="f-public-hint">Erscheint auf der Statusseite, ohne Adresse und ohne Fehlertexte.</p>
+      </div>
+      <div class="check">
+        <input id="f-paused" name="paused" type="checkbox" value="1"{{if .Paused}} checked{{end}}>
+        <label for="f-paused">Pausiert</label>
+      </div>
+
+      <div class="send-row">
+        <button class="send" type="submit">Speichern</button>
+        <a class="go quiet" href="/admin/">Abbrechen</a>
+      </div>
+    </div>
+  </form>
+</div>
+{{end}}

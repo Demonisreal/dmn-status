@@ -1,0 +1,10 @@
+{{define "main"}}
+<div class="wrap lost lost-in">
+  <p class="lost-code" aria-hidden="true">404</p>
+  <div>
+    <h1>{{t .Lang "nf.title"}}</h1>
+    <p class="lead">{{t .Lang "nf.lead"}}</p>
+    <p class="cta"><a class="go" href="{{base .Lang}}/">{{t .Lang "nf.back"}}</a></p>
+  </div>
+</div>
+{{end}}

@@ -1,0 +1,31 @@
+[
+  {
+    "endpoint": "203.0.113.17:52110",
+    "id": 1,
+    "identifiers": [
+      "license:0000000000000000000000000000000000000001",
+      "discord:000000000000000001"
+    ],
+    "name": "Testspieler Eins",
+    "ping": 38
+  },
+  {
+    "endpoint": "198.51.100.42:61024",
+    "id": 4,
+    "identifiers": [
+      "license:0000000000000000000000000000000000000002"
+    ],
+    "name": "Max Mustermann",
+    "ping": 71
+  },
+  {
+    "endpoint": "192.0.2.9:49877",
+    "id": 7,
+    "identifiers": [
+      "license:0000000000000000000000000000000000000003",
+      "discord:000000000000000003"
+    ],
+    "name": "Jörg Beispiel",
+    "ping": 124
+  }
+]
