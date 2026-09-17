@@ -1,0 +1,42 @@
+name: dmn-status
+
+# eigenes netz status_edge, kein praefix noetig, dienstname kollidiert mit nichts.
+services:
+  dmn-status:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    env_file: .env
+    environment:
+      # unter mem_limit bleiben, bevor der go-gc greift statt der kernel-oom-killer
+      GOMEMLIMIT: 100MiB
+    volumes:
+      - status-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,noexec,nosuid
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    pids_limit: 128
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks: [edge]
+
+volumes:
+  status-data:
+
+networks:
+  # von hand angelegt, subnetz muss beim create feststehen (compose kann es fuer ein
+  # externes netz nicht erzwingen):
+  # docker network create --subnet=172.20.0.0/24 status_edge && docker network connect status_edge caddy
+  # das ganze /24 gilt der app als vertrauenswuerdig fuer x-forwarded-for (TRUSTED_PROXY),
+  # deshalb duerfen ausser dem reverse_proxy und dmn-status keine weiteren container in
+  # status_edge haengen.
+  edge:
+    name: status_edge
+    external: true

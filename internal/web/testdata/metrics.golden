@@ -1,0 +1,17 @@
+# HELP dmn_status_up Ergebnis des letzten Checks, 1 erreichbar.
+# TYPE dmn_status_up gauge
+dmn_status_up{target="Web \"eins\" \\ zwei",kind="http"} 1
+dmn_status_up{target="Intern",kind="http"} 0
+# HELP dmn_status_latency_seconds Antwortzeit des letzten Checks.
+# TYPE dmn_status_latency_seconds gauge
+dmn_status_latency_seconds{target="Web \"eins\" \\ zwei"} 0.142
+dmn_status_latency_seconds{target="Intern"} 0.012
+# HELP dmn_status_checks_total Checks seit dem Start des Prozesses.
+# TYPE dmn_status_checks_total counter
+dmn_status_checks_total{target="Web \"eins\" \\ zwei",result="ok"} 0
+dmn_status_checks_total{target="Web \"eins\" \\ zwei",result="fail"} 0
+dmn_status_checks_total{target="Intern",result="ok"} 0
+dmn_status_checks_total{target="Intern",result="fail"} 0
+# HELP dmn_status_build_info Version des laufenden Builds.
+# TYPE dmn_status_build_info gauge
+dmn_status_build_info{version="t"} 1

@@ -1,0 +1,30 @@
+{{define "head"}}
+<meta name="robots" content="noindex">
+{{- end}}
+
+{{define "main"}}
+<div class="wrap page">
+  <form class="sk frm login" method="post" action="/admin/login">
+    <h1 class="sk-bar"><img src="/static/icon.svg?v={{.Version}}" alt="" width="18" height="18">Anmelden</h1>
+    <div class="frm-in">
+      {{- if .CSRF}}
+      <input type="hidden" name="csrf" value="{{.CSRF}}">
+      {{- end}}
+      {{- if .Error}}
+      <p class="err" id="login-err" role="alert">{{template "erricon"}}{{.Error}}</p>
+      {{- end}}
+      <div class="field">
+        <label for="l-user">Benutzername</label>
+        <input id="l-user" name="username" value="{{.Username}}" autocomplete="username" autocapitalize="none" spellcheck="false" required{{if .Error}} aria-invalid="true" aria-describedby="login-err"{{else}} autofocus{{end}}>
+      </div>
+      <div class="field">
+        <label for="l-pass">Passwort</label>
+        <input id="l-pass" name="password" type="password" autocomplete="current-password" required{{if .Error}} aria-invalid="true" aria-describedby="login-err" autofocus{{end}}>
+      </div>
+      <div class="send-row">
+        <button class="send" type="submit">Anmelden</button>
+      </div>
+    </div>
+  </form>
+</div>
+{{end}}
