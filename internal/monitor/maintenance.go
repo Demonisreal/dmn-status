@@ -20,8 +20,6 @@ type mailKey struct {
 	up       bool
 }
 
-// Maintain startet die Wartung im Hintergrund: Rollup und Mail-Nachversand alle 5 Minuten,
-// alte Checks und abgelaufene Sitzungen stuendlich. Wait wartet auch auf sie.
 func (m *Manager) Maintain(ctx context.Context, retentionDays int) {
 	m.wg.Go(func() {
 		m.rollup(ctx)
@@ -63,10 +61,6 @@ func (m *Manager) cleanup(ctx context.Context, retentionDays int) {
 	}
 }
 
-// retry versucht jede liegengebliebene Mail genau einmal erneut. Eine Mail zaehlt erst als
-// liegengeblieben, wenn sie schon beim vorigen Durchlauf fehlte, sonst koennte sie gerade
-// noch im Runner unterwegs sein und kaeme doppelt. Scheitert der Versuch am Mail-Limit, ist
-// er nicht verbraucht: der Server wurde gar nicht gefragt.
 func (m *Manager) retry(ctx context.Context) {
 	if m.mail == nil {
 		return
@@ -81,7 +75,6 @@ func (m *Manager) retry(ctx context.Context) {
 
 	pending := make(map[mailKey]bool, len(list))
 	for _, inc := range list {
-		// beendet und wiederkehr gemeldet: die ausfall-mail ist ueberholt
 		if !inc.Open() && inc.MailedUp {
 			continue
 		}

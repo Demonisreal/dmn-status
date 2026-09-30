@@ -12,7 +12,6 @@ import (
 	"github.com/Demonisreal/dmn-status/internal/testutil"
 )
 
-// 12:30 utc, damit laufende stunde und stundengrenzen im test eindeutig sind
 var start = time.Date(2026, 3, 10, 12, 30, 0, 0, time.UTC)
 
 func newStore(t *testing.T) (*Store, *testutil.Clock) {
@@ -201,7 +200,6 @@ func TestChecks(t *testing.T) {
 		{OK: true, LatencyMs: 40, StatusCode: 200, Players: &players, MaxPlayers: &maxPlayers, Version: "FXServer v1"},
 		{OK: true, LatencyMs: 42, StatusCode: 200},
 	}
-	// der erste liegt noch in der vorigen stunde
 	at := start.Add(-31 * time.Minute)
 	for _, r := range results {
 		addCheck(t, s, id, at, r)
@@ -304,7 +302,6 @@ func TestPrune(t *testing.T) {
 		exec(t, s, `insert into hourly values (?, ?, 1, 1, 0, 0, 0)`, id, cur-days*24*hour)
 	}
 	const day = 24 * hour
-	// nur der vor 401 tagen beendete vorfall ist weg, ein offener bleibt egal wie alt
 	for _, days := range []int64{399, 401} {
 		exec(t, s, `insert into incidents (target_id, started_at, ended_at) values (?, ?, ?)`,
 			id, start.Unix()-(days+1)*day, start.Unix()-days*day)

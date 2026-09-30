@@ -7,9 +7,6 @@ import (
 	"time"
 )
 
-// Segment 3 breit plus 1 luecke, fuer jede zellenzahl gleich. Das svg wird ohne
-// seitenverhaeltnis gestreckt: 24 stunden, 30 tage und 90 stunden sind damit dasselbe
-// material in verschiedener zoomstufe. Schmal holt css die luecke der dichten leiste zurueck.
 const (
 	barStep   = 4
 	barsWide  = 30
@@ -17,8 +14,6 @@ const (
 	barStub   = 4
 )
 
-// HourBars baut die leiste aus stunden- oder tageszellen, step ist die laenge einer zelle.
-// Ohne daten gibt es nur einen stummel am boden, damit das nicht allein an der farbe haengt.
 func HourBars(cells []HourCell, step time.Duration, lang string) Chart {
 	c := Chart{Width: len(cells) * barStep, Height: barHeight, Bars: make([]Bar, 0, len(cells))}
 	var up, down, none int
@@ -58,14 +53,11 @@ func barTitle(lang string, cell HourCell, s State, step time.Duration) string {
 	case StateUnknown:
 		return at + " · " + T(lang, "bars.none")
 	case StateDown:
-		// die prozentzahl allein liest sich wie ein normaler wert, das wort aus der legende davor
 		return at + " · " + T(lang, "leg.down") + " · " + pct(lang, cell.Uptime)
 	}
 	return at + " · " + pct(lang, cell.Uptime)
 }
 
-// Dense meldet die dichte leiste (90 stunden). Schmal ist dort jede zelle nur wenige pixel
-// breit, css nimmt die luecken dann zurueck.
 func (c Chart) Dense() bool { return len(c.Bars) > barsWide }
 
 func (b Bar) Class() string {
@@ -78,19 +70,14 @@ func (b Bar) Class() string {
 	return "bar-none"
 }
 
-// Oben bleiben latTop einheiten frei, dort zieht das template die linie fuer den hoechsten wert.
 const (
 	latWidth  = 600
 	latHeight = 165
 	latTop    = 15
 )
 
-// MaxY ist die hoehe der gestrichelten oberkante; das template soll latTop nicht abschreiben.
 func (c Chart) MaxY() int { return latTop }
 
-// LatencyLine rechnet den pfad fuer das diagramm, gleich verteilt ueber den zeitraum.
-// Werte unter 0 sind schritte ohne messung, dort bricht die linie ab. Ein einzelner
-// messwert zwischen zwei luecken wird mit h0 zum punkt, sonst waere er unsichtbar.
 func LatencyLine(ms []int, lang string) Chart {
 	c := Chart{Width: latWidth, Height: latHeight}
 	seen := false
@@ -117,7 +104,6 @@ func LatencyLine(ms []int, lang string) Chart {
 			run = 0
 			continue
 		}
-		// bei nur einem schritt steht der punkt in der mitte des zeitraums, nicht am rand
 		x := float64(latWidth) / 2
 		if len(ms) > 1 {
 			x = float64(i) * latWidth / float64(len(ms)-1)

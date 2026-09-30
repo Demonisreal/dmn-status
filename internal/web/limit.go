@@ -22,8 +22,6 @@ type window struct {
 	warned bool
 }
 
-// limiter zaehlt login-versuche je ip und insgesamt, jeweils in festen 15-minuten-fenstern.
-// Gezaehlt wird vor dem passwortvergleich, ein erfolgreicher login nimmt den versuch zurueck.
 type limiter struct {
 	mu     sync.Mutex
 	ips    map[string]*window
@@ -35,10 +33,6 @@ func newLimiter() *limiter {
 	return &limiter{ips: map[string]*window{}}
 }
 
-// take bucht einen versuch. Ist das limit erreicht, kommt die wartezeit zurueck und es wird
-// nichts gebucht. Ein bekanntes geraet zaehlt global mit, wird aber vom globalen limit nicht
-// gesperrt: so kommt der admin auch waehrend eines verteilten angriffs noch rein.
-// first ist nur bei der ersten abweisung im fenster gesetzt, damit eine flut nicht das log fuellt.
 func (l *limiter) take(ip string, now time.Time, knownDevice bool) (wait time.Duration, first bool) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -91,9 +85,6 @@ func (l *limiter) forgive(ip string) {
 	}
 }
 
-// clientIP nimmt RemoteAddr. X-Forwarded-For zaehlt nur, wenn RemoteAddr in TRUSTED_PROXY liegt,
-// und dann nur der letzte eintrag: den hat der proxy selbst angehaengt, alles davor kommt vom client.
-// IPv6 wird auf /64 gekuerzt, ein einzelner anschluss hat meist das ganze netz.
 func (s *server) clientIP(r *http.Request) string {
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {

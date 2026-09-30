@@ -18,7 +18,6 @@ func TestRetry(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// beendet, keine der beiden mails raus: nur die wiederkehr wird nachgeholt
 	closed, err := f.st.OpenIncident(ctx, b, start.Add(-2*time.Hour), "zeitueberschreitung")
 	if err != nil {
 		t.Fatal(err)
@@ -26,7 +25,6 @@ func TestRetry(t *testing.T) {
 	if err := f.st.CloseIncident(ctx, closed, start.Add(-90*time.Minute)); err != nil {
 		t.Fatal(err)
 	}
-	// zu alt fuer den nachversand
 	old, err := f.st.OpenIncident(ctx, f.target("Alt", 1, false), start.Add(-48*time.Hour), "status 500")
 	if err != nil {
 		t.Fatal(err)
@@ -43,14 +41,12 @@ func TestRetry(t *testing.T) {
 		t.Fatalf("fehlschlag gespeichert: %d", n)
 	}
 
-	// jede mail hatte ihren einen versuch, auch wenn der server jetzt wieder geht
 	f.mailErr = nil
 	m.retry(ctx)
 	if n := f.mailCount(); n != 0 {
 		t.Fatalf("zweiter versuch: %d mails", n)
 	}
 
-	// neuer vorfall wird nach zwei durchlaeufen genau einmal nachgeschickt
 	if err := f.st.CloseIncident(ctx, downOnly, start); err != nil {
 		t.Fatal(err)
 	}

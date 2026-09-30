@@ -53,7 +53,6 @@ func newFake(t *testing.T) *fake {
 	}
 }
 
-// manager mit falschem checker und fake-mail, eine intervall-sekunde ist eine millisekunde
 func (f *fake) manager(unit time.Duration) *Manager {
 	m := New(f.st, check.Checker{}, nil)
 	m.unit = unit
@@ -127,7 +126,6 @@ func (f *fake) mailCount() int {
 	return len(f.mails)
 }
 
-// run startet den manager und stoppt ihn am testende, haengt Wait, schlaegt der test fehl
 func run(t *testing.T, m *Manager) context.CancelFunc {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
@@ -171,7 +169,6 @@ func TestDownUp(t *testing.T) {
 		t.Fatalf("wiederkehr-mail %+v", up)
 	}
 
-	// MarkMailed laeuft nach der mail, kurz warten bis beides vermerkt ist
 	deadline := time.Now().Add(wait)
 	for {
 		list, err := f.st.UnmailedIncidents(context.Background(), start.Add(-time.Hour))
@@ -237,7 +234,6 @@ func TestPausedAndReload(t *testing.T) {
 		t.Fatal("alter runner laeuft nach Reload weiter")
 	}
 
-	// bis der kanal leer ist, koennen noch checks mit dem alten namen drin liegen
 	for {
 		if c := f.call(); c.Name == "Website neu" {
 			break
@@ -285,7 +281,6 @@ func TestCheckNow(t *testing.T) {
 	f := newFake(t)
 	f.ok.Store(true)
 	id := f.target("Website", 1, false)
-	// intervall 30 stunden, ohne anstoss kommt kein check
 	m := f.manager(time.Hour)
 	run(t, m)
 	f.nudge(m, id)
@@ -313,7 +308,6 @@ func TestCheckNowWhileRunning(t *testing.T) {
 		}
 		time.Sleep(time.Millisecond)
 	}
-	// waehrend der check haengt, gehen weitere anstoesse verloren
 	for range 5 {
 		m.CheckNow(id)
 	}
@@ -355,7 +349,6 @@ func TestCheckNowGap(t *testing.T) {
 		}
 	}
 
-	// ein neuer runner nach Reload hat noch keinen anstoss bekommen
 	if err := m.Reload(context.Background(), id); err != nil {
 		t.Fatal(err)
 	}
@@ -400,7 +393,6 @@ func TestCancelStopsEverything(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 	}
 
-	// abgebrochene checks zaehlen nicht als ausfall
 	list, err := f.st.RecentIncidents(context.Background(), 10, start.Add(-time.Hour), false)
 	if err != nil || len(list) != 0 {
 		t.Errorf("vorfaelle nach abbruch: %+v %v", list, err)
@@ -423,7 +415,6 @@ func TestRestartKeepsIncident(t *testing.T) {
 	cancel()
 	waitDone(t, m)
 
-	// zweiter prozess, das ziel ist weiter down
 	m = f.manager(time.Millisecond)
 	run(t, m)
 	for len(f.calls) > 0 {
@@ -491,16 +482,12 @@ func TestRestoreFailSeries(t *testing.T) {
 	}
 }
 
-// checkNow stoesst einen check an und wartet, bis er laeuft. Der anstoss kommt nur an, wenn
-// die vorige runde fertig ist. Die uhr springt vorher ueber die sperrfrist von CheckNow.
 func (f *fake) checkNow(m *Manager, id int64) {
 	f.t.Helper()
 	f.clock.Advance(checkNowGap)
 	f.nudge(m, id)
 }
 
-// nudge wiederholt CheckNow, bis der anstoss beim runner ankommt. Waehrend er den zustand
-// laedt oder prueft, geht ein anstoss ins leere.
 func (f *fake) nudge(m *Manager, id int64) {
 	f.t.Helper()
 	deadline := time.Now().Add(wait)
@@ -563,7 +550,6 @@ func TestPauseClosesIncident(t *testing.T) {
 	if len(list) != 1 || list[0].ID != first.ID || !list[0].EndedAt.Equal(pausedAt) || !list[0].MailedDown || !list[0].MailedUp {
 		t.Fatalf("nach pause %+v", list)
 	}
-	// weder wiederkehr noch die liegengebliebene ausfall-mail
 	for range 3 {
 		m.retry(ctx)
 	}
@@ -578,7 +564,6 @@ func TestPauseClosesIncident(t *testing.T) {
 	if err := m.Reload(ctx, id); err != nil {
 		t.Fatal(err)
 	}
-	// die fehler vor der pause zaehlen nicht, zwei neue reichen bei schwelle 3 nicht
 	f.checkNow(m, id)
 	f.checkNow(m, id)
 	if _, err := f.st.OpenIncidentFor(ctx, id); !errors.Is(err, store.ErrNotFound) {

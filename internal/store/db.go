@@ -1,4 +1,3 @@
-// Package store kapselt die SQLite-Datenbank. Zeiten liegen als Unix-Sekunden in UTC.
 package store
 
 import (
@@ -27,17 +26,12 @@ type Store struct {
 	now func() time.Time
 }
 
-// uri-sonderzeichen im pfad wuerden sonst als query oder fragment gelesen
 var uriPath = strings.NewReplacer("%", "%25", "?", "%3f", "#", "%23")
 
-// Open oeffnet die Datenbank und spielt fehlende Migrationen ein. now ist die Uhr fuer
-// alles, was "jetzt" braucht, in Produktion time.Now.
 func Open(ctx context.Context, file string, now func() time.Time) (*Store, error) {
 	dsn := "file:" + uriPath.Replace(filepath.ToSlash(file)) +
 		"?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(1)"
 
-	// sqlite kennt nur einen schreiber. mit einer verbindung stehen schreibzugriffe im pool
-	// an statt in SQLITE_BUSY zu laufen, immediate holt die sperre schon beim begin.
 	w, err := sql.Open("sqlite", dsn+"&_txlock=immediate")
 	if err != nil {
 		return nil, err
@@ -95,8 +89,6 @@ func applyMigration(ctx context.Context, db *sql.DB, name, version string, now t
 	}
 	defer tx.Rollback()
 
-	// die pruefung liegt in der transaktion, zwei gleichzeitig startende prozesse
-	// spielen dieselbe migration so nicht doppelt ein
 	var done bool
 	err = tx.QueryRowContext(ctx, `select exists (select 1 from schema_migrations where version = ?)`, version).Scan(&done)
 	if err != nil || done {
@@ -139,13 +131,11 @@ func affected(res sql.Result, err error) error {
 	return nil
 }
 
-// Ping prueft, ob die Datenbank lesbar ist, fuer /healthz.
 func (s *Store) Ping(ctx context.Context) error {
 	var n int
 	return s.r.QueryRowContext(ctx, `select 1`).Scan(&n)
 }
 
-// Backup schreibt eine konsistente Kopie nach file. Die Datei darf noch nicht existieren.
 func (s *Store) Backup(ctx context.Context, file string) error {
 	_, err := s.w.ExecContext(ctx, `vacuum into ?`, file)
 	return err

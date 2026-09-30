@@ -19,7 +19,7 @@ func TestValidate(t *testing.T) {
 	tests := []struct {
 		name  string
 		edit  func(*Target)
-		field string // leer heisst gueltig
+		field string
 	}{
 		{"gueltig", func(t *Target) {}, ""},
 		{"http mit port und pfad", func(t *Target) { t.Address = "http://example.com:8080/health?x=1" }, ""},

@@ -40,7 +40,6 @@ func TestPauseClosesIncidentWithoutMail(t *testing.T) {
 		t.Errorf("beendet %+v", got)
 	}
 
-	// weder Reload noch der nachversand schicken eine wiederkehr
 	for range 3 {
 		m.retry(ctx)
 	}

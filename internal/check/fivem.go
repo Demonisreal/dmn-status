@@ -20,13 +20,10 @@ const (
 type fivemInfo struct {
 	Server string `json:"server"`
 	Vars   struct {
-		// FXServer liefert convars als String, aeltere Builds und Proxys teils als Zahl
 		MaxClients json.RawMessage `json:"sv_maxClients"`
 	} `json:"vars"`
 }
 
-// checkFiveM fragt info.json und players.json ab. Nur info.json entscheidet ueber den
-// Zustand: players.json ist bei sv_requestParanoia oft gesperrt, der Server laeuft trotzdem.
 func (c Checker) checkFiveM(ctx context.Context, t Target) Result {
 	client := c.client(t.ConnectTo)
 	base := "http://" + t.Address
@@ -49,12 +46,10 @@ func (c Checker) checkFiveM(ctx context.Context, t Target) Result {
 
 	res.OK = true
 	res.Version = version(info.Server)
-	// fxserver erlaubt hoechstens 2048 slots, alles andere ist unsinn aus der antwort
 	if n, err := strconv.Atoi(strings.Trim(string(info.Vars.MaxClients), `"`)); err == nil && n >= 0 && n <= 2048 {
 		res.MaxPlayers = &n
 	}
 
-	// struct{} verwirft namen, identifier und endpoints schon beim dekodieren
 	var players []struct{}
 	if _, err := getJSON(ctx, client, base+"/players.json", &players); err == nil {
 		n := len(players)

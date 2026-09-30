@@ -11,8 +11,6 @@ import (
 	"time"
 )
 
-// Preview liefert alle seiten mit festen beispieldaten, nur fuer die arbeit an der oberflaeche.
-// Die zahlen sind ausgedacht und duerfen nie in einem echten build landen.
 func Preview() http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(Static())))
@@ -20,7 +18,6 @@ func Preview() http.Handler {
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) { show(w, "status", demoStatus("de", r.URL.Path)) })
 	mux.HandleFunc("GET /en/{$}", func(w http.ResponseWriter, r *http.Request) { show(w, "status", demoStatus("en", r.URL.Path)) })
 
-	// randfaelle der statusseite
 	mux.HandleFunc("GET /leer", func(w http.ResponseWriter, r *http.Request) {
 		p := demoStatus("de", r.URL.Path)
 		p.Targets, p.Incidents, p.Overall = nil, nil, StateUnknown
@@ -280,7 +277,6 @@ func demoHours(n int, step time.Duration, state func(int) State) []HourCell {
 	return cells
 }
 
-// demoDown legt fuer jedes ziel feste ausfaelle fest, damit die vorschau bei jedem reload gleich aussieht
 func demoDown(id int64) func(i, n int) bool {
 	return func(i, n int) bool {
 		switch id {
