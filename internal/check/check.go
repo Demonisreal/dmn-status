@@ -1,4 +1,3 @@
-// Package check fuehrt die einzelnen Pruefungen aus: http, tcp und fivem.
 package check
 
 import (
@@ -38,8 +37,6 @@ type Target struct {
 	UpdatedAt     time.Time
 }
 
-// Result ist das Ergebnis eines Checks. Err ist kurz und landet so im Admin, deshalb ohne
-// Adressen oder Details aus dem Netzwerkstack.
 type Result struct {
 	OK         bool
 	LatencyMs  int
@@ -51,15 +48,10 @@ type Result struct {
 }
 
 type Checker struct {
-	// PrivateAllow sind host:port-Eintraege, die connect_to trotz privater Adresse
-	// erreichen darf. Die address selbst muss immer oeffentlich sein, loopback bleibt zu.
 	PrivateAllow []string
 
-	// Block sind aufgeloeste eigene oeffentliche Adressen, z. B. aus BASE_URL, um Pruefungen
-	// der eigenen Statusseite gegen sich selbst zu verhindern.
 	Block []netip.Addr
 
-	// nur fuer tests im paket: httptest lauscht auf 127.0.0.1, lookup ersetzt das DNS
 	loopback bool
 	lookup   func(ctx context.Context, host string) ([]netip.Addr, error)
 }

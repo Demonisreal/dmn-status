@@ -6,7 +6,6 @@ import (
 	"errors"
 )
 
-// Admin liefert Benutzername und Passwort-Hash oder ErrNotFound, solange keiner angelegt ist.
 func (s *Store) Admin(ctx context.Context) (username, hash string, err error) {
 	err = s.r.QueryRowContext(ctx, `select username, pw_hash from admin where id = 1`).Scan(&username, &hash)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -15,8 +14,6 @@ func (s *Store) Admin(ctx context.Context) (username, hash string, err error) {
 	return username, hash, err
 }
 
-// SetAdmin setzt Name und Hash und meldet dabei alle Sitzungen und Geraete ab, ein neues
-// Passwort soll ein altes Cookie nicht weiterleben lassen.
 func (s *Store) SetAdmin(ctx context.Context, username, hash string) error {
 	tx, err := s.w.BeginTx(ctx, nil)
 	if err != nil {

@@ -25,14 +25,11 @@ func (s *Store) InsertCheck(ctx context.Context, targetID int64, at time.Time, r
 	return err
 }
 
-// LastChecks liefert die letzten n Checks eines Ziels, neuester zuerst.
 func (s *Store) LastChecks(ctx context.Context, targetID int64, n int) ([]Check, error) {
 	return s.checks(ctx, `select at, ok, latency_ms, status_code, error, players, max_players, version
 		from checks where target_id = ? order by at desc, id desc limit ?`, targetID, n)
 }
 
-// HourChecks liefert die Checks der laufenden Stunde, aeltester zuerst. Die sind noch
-// nicht in hourly verdichtet.
 func (s *Store) HourChecks(ctx context.Context, targetID int64) ([]Check, error) {
 	return s.checks(ctx, `select at, ok, latency_ms, status_code, error, players, max_players, version
 		from checks where target_id = ? and at >= ? order by at, id`, targetID, hourStart(s.now()))

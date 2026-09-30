@@ -1,4 +1,3 @@
-// Package config liest die Einstellungen aus der Umgebung.
 package config
 
 import (
@@ -18,26 +17,24 @@ import (
 type Config struct {
 	Addr          string
 	DBPath        string
-	BaseURL       string       // ohne abschliessenden slash, leer wenn nicht gesetzt
-	TrustedProxy  netip.Prefix // ohne gueltiges netz zaehlt X-Forwarded-For nie
+	BaseURL       string
+	TrustedProxy  netip.Prefix
 	CookieSecure  bool
-	PrivateAllow  []string // host:port, nur fuer connect_to
+	PrivateAllow  []string
 	RetentionDays int
-	MetricsToken  string // leer schaltet /metrics ab
+	MetricsToken  string
 
 	SMTPHost string
 	SMTPPort int
 	SMTPUser string
 	SMTPPass string
 	MailFrom string
-	MailTo   []string // nur die adressen, ohne anzeigenamen
+	MailTo   []string
 
-	// nur fuer den ersten start, solange noch kein admin in der datenbank steht
 	AdminUser     string
 	AdminPassword string
 }
 
-// MailEnabled ist true, wenn SMTP_HOST und MAIL_TO gesetzt sind.
 func (c Config) MailEnabled() bool {
 	return c.SMTPHost != "" && len(c.MailTo) > 0
 }
@@ -98,7 +95,6 @@ func load(get func(string) string) (Config, error) {
 		SMTPHost:      e.str("SMTP_HOST", ""),
 		SMTPPort:      e.num("SMTP_PORT", 465, 1, 65535),
 		SMTPUser:      e.str("SMTP_USER", ""),
-		// passwoerter nicht trimmen, leerzeichen am rand koennen dazugehoeren
 		SMTPPass:      get("SMTP_PASS"),
 		MailFrom:      e.str("MAIL_FROM", ""),
 		AdminUser:     e.str("ADMIN_USER", ""),
@@ -115,8 +111,6 @@ func load(get func(string) string) (Config, error) {
 			e.fail("BASE_URL", "z. b. https://status.example.com")
 		}
 	}
-	// TRUST_PROXY=true still zu ignorieren hiesse, alle besucher teilen sich die ip des proxys
-	// und damit die login-sperre
 	if e.str("TRUST_PROXY", "") != "" {
 		e.fail("TRUST_PROXY", "entfernt, stattdessen TRUSTED_PROXY=cidr des proxy-netzes")
 	}
@@ -127,7 +121,6 @@ func load(get func(string) string) (Config, error) {
 		}
 		c.TrustedProxy = p.Masked()
 	}
-	// alte .env-dateien sollen laut scheitern statt still alle privaten ziele zu sperren
 	if e.str("ALLOW_PRIVATE", "") != "" {
 		e.fail("ALLOW_PRIVATE", "entfernt, stattdessen PRIVATE_ALLOW=host:port,...")
 	}

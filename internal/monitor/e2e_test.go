@@ -26,9 +26,6 @@ import (
 	"github.com/Demonisreal/dmn-status/internal/web"
 )
 
-// Der test liegt hier und nicht in internal/web, weil nur export_test.go an den checker und
-// den takt des managers kommt. Der echte checker sperrt loopback, httptest lauscht aber dort.
-
 var csrfField = regexp.MustCompile(`name="csrf" value="([^"]+)"`)
 
 type browser struct {
@@ -54,7 +51,6 @@ func (b *browser) get(path string) string {
 	return string(body)
 }
 
-// submit holt das csrf-token von der seite mit dem formular und schickt es ab
 func (b *browser) submit(page, action string, form url.Values) *http.Response {
 	b.t.Helper()
 	m := csrfField.FindStringSubmatch(b.get(page))
@@ -74,7 +70,6 @@ func serveOn(t *testing.T, addr string) *httptest.Server {
 	t.Helper()
 	var ln net.Listener
 	var err error
-	// windows gibt den port nach dem schliessen nicht immer sofort frei
 	for deadline := time.Now().Add(5 * time.Second); ; time.Sleep(50 * time.Millisecond) {
 		if ln, err = net.Listen("tcp", addr); err == nil || time.Now().After(deadline) {
 			break
@@ -119,7 +114,6 @@ func TestE2EDownUpMail(t *testing.T) {
 
 	mgr := monitor.New(st, check.Checker{}, mailer)
 	hc := &http.Client{Timeout: 500 * time.Millisecond, Transport: &http.Transport{DisableKeepAlives: true}}
-	// eine intervall-sekunde ist eine millisekunde, das kleinste formular-intervall sind also 30 ms
 	monitor.SetCheck(mgr, time.Millisecond, func(ctx context.Context, tg check.Target) check.Result {
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, tg.Address, nil)
 		if err != nil {
@@ -169,7 +163,6 @@ func TestE2EDownUpMail(t *testing.T) {
 	waitPage := func(want ...string) string {
 		t.Helper()
 		var body string
-		// die statusseite kommt bis zu 5 s aus dem cache
 		for deadline := time.Now().Add(15 * time.Second); time.Now().Before(deadline); time.Sleep(20 * time.Millisecond) {
 			body = b.get("/")
 			if containsAll(body, want) {
@@ -191,7 +184,6 @@ func TestE2EDownUpMail(t *testing.T) {
 		t.Errorf("down-mail:\n%s", msgs[0].Data)
 	}
 	waitPage(`data-state="down"`, web.T("de", "inc.live"))
-	// in der zeit laufen dutzende weitere checks, die mail darf trotzdem nur einmal kommen
 	time.Sleep(300 * time.Millisecond)
 	if n := len(smtp.Messages()); n != 1 {
 		t.Fatalf("%d mails waehrend des ausfalls, wollte 1", n)

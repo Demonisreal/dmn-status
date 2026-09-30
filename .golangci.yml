@@ -24,7 +24,6 @@ linters:
         - G104
     revive:
       rules:
-        # kein doc-kommentar-zwang fuer exportierte namen
         - name: exported
           disabled: true
     depguard:

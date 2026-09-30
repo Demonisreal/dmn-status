@@ -13,14 +13,10 @@ import (
 	"github.com/Demonisreal/dmn-status/internal/store"
 )
 
-// jeder http-check haelt bis zu 1 MiB body, bei 128 MB fuer den container reicht das
 const maxParallel = 8
 
-// checkNowGap ist der Mindestabstand zwischen zwei Anstoessen ueber CheckNow je Runner
 const checkNowGap = 10 * time.Second
 
-// Stat ist der letzte bekannte Stand eines Ziels fuer /metrics. Die Zaehler laufen seit dem
-// Start des Prozesses und ueberleben ein Reload.
 type Stat struct {
 	Checked    bool
 	OK         bool
@@ -33,16 +29,13 @@ type Stat struct {
 type Manager struct {
 	store *store.Store
 	check func(context.Context, check.Target) check.Result
-	mail  func(context.Context, store.Incident) error // nil ohne smtp
+	mail  func(context.Context, store.Incident) error
 	now   func() time.Time
-	unit  time.Duration // eine sekunde im intervall, im test kleiner
+	unit  time.Duration
 	sem   chan struct{}
 
-	// pending gehoert der wartungsschleife, siehe retry
 	pending map[mailKey]bool
 
-	// ops serialisiert Start, Reload, Delete und Wait. Die Runner nehmen nur mu, sonst
-	// koennte stop beim warten auf einen Runner haengen, der gerade seine Stat schreibt.
 	ops sync.Mutex
 	ctx context.Context
 	wg  sync.WaitGroup
@@ -56,10 +49,9 @@ type runner struct {
 	cancel context.CancelFunc
 	done   chan struct{}
 	now    chan struct{}
-	nudged time.Time // letzter angekommener CheckNow, unter mu
+	nudged time.Time
 }
 
-// New baut den Manager. mailer darf nil sein, dann gibt es Vorfaelle ohne Mail.
 func New(st *store.Store, c check.Checker, mailer *alert.Mailer) *Manager {
 	m := &Manager{
 		store:   st,
@@ -81,7 +73,6 @@ func New(st *store.Store, c check.Checker, mailer *alert.Mailer) *Manager {
 	return m
 }
 
-// Start startet einen Runner je nicht pausiertem Ziel. Alle Runner laufen, bis ctx endet.
 func (m *Manager) Start(ctx context.Context) error {
 	m.ops.Lock()
 	defer m.ops.Unlock()
@@ -99,23 +90,17 @@ func (m *Manager) Start(ctx context.Context) error {
 	return nil
 }
 
-// Reload stoppt den Runner eines Ziels und startet ihn mit den aktuellen Daten neu, nach
-// Anlegen, Bearbeiten oder Pausieren. Ein pausiertes Ziel verliert dabei seinen offenen
-// Vorfall, ohne Mail.
 func (m *Manager) Reload(ctx context.Context, id int64) error {
 	m.ops.Lock()
 	defer m.ops.Unlock()
 
 	m.stop(id)
-	// der runner muss auch dann wieder starten, wenn die anfrage inzwischen abgebrochen ist
 	ctx = context.WithoutCancel(ctx)
 	t, err := m.store.Target(ctx, id)
 	if err != nil {
 		return err
 	}
 	if t.Paused {
-		// erst nach stop, sonst kann eine laufende runde den vorfall noch mit mail schliessen
-		// oder gleich einen neuen eroeffnen
 		return m.store.ClosePausedIncident(ctx, id)
 	}
 	if m.ctx.Err() == nil {
@@ -124,18 +109,13 @@ func (m *Manager) Reload(ctx context.Context, id int64) error {
 	return nil
 }
 
-// Delete stoppt den Runner und loescht das Ziel in einem Schritt. Erst stoppen, sonst schreibt
-// ein laufender Check noch in ein geloeschtes Ziel. Getrennt koennte zwischen beidem ein Reload
-// den Runner fuer das noch vorhandene Ziel neu starten.
 func (m *Manager) Delete(ctx context.Context, id int64) error {
 	m.ops.Lock()
 	defer m.ops.Unlock()
 
 	m.stop(id)
-	// wie bei Reload: ist der runner einmal weg, soll das loeschen nicht am client scheitern
 	ctx = context.WithoutCancel(ctx)
 	if err := m.store.DeleteTarget(ctx, id); err != nil {
-		// das ziel steht noch in der datenbank und wuerde sonst bis zum neustart nicht geprueft
 		if !errors.Is(err, store.ErrNotFound) {
 			if t, terr := m.store.Target(ctx, id); terr != nil {
 				slog.Error("ziel nach loeschfehler laden", "target", id, "err", terr)
@@ -151,9 +131,6 @@ func (m *Manager) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-// CheckNow stoesst einen Check ausserhalb des Intervalls an. Laeuft fuer das Ziel gerade ein
-// Check, faellt der Anstoss weg. false heisst, es gibt keinen Runner (pausiert oder unbekannt)
-// oder der letzte Anstoss liegt noch keine checkNowGap zurueck.
 func (m *Manager) CheckNow(id int64) bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -165,8 +142,6 @@ func (m *Manager) CheckNow(id int64) bool {
 	if !r.nudged.IsZero() && now.Sub(r.nudged) < checkNowGap {
 		return false
 	}
-	// ungepuffert: kommt nur an, wenn der runner gerade wartet. Nur ein angekommener anstoss
-	// zaehlt fuer die sperrfrist, ein weggefallener hat keinen check ausgeloest.
 	select {
 	case r.now <- struct{}{}:
 		r.nudged = now
@@ -175,7 +150,6 @@ func (m *Manager) CheckNow(id int64) bool {
 	return true
 }
 
-// Wait wartet nach dem Ende des Start-Contexts, bis alle Runner und die Wartung fertig sind.
 func (m *Manager) Wait() {
 	m.ops.Lock()
 	defer m.ops.Unlock()
@@ -220,8 +194,7 @@ func (m *Manager) run(ctx context.Context, t check.Target, now <-chan struct{}) 
 	st := m.restore(ctx, t)
 	interval := time.Duration(t.IntervalS) * m.unit
 
-	// zufaelliger start, damit nach einem neustart nicht alle ziele gleichzeitig pruefen
-	timer := time.NewTimer(rand.N(interval)) //nolint:gosec // nur jitter, nicht sicherheitsrelevant
+	timer := time.NewTimer(rand.N(interval)) //nolint:gosec
 	defer timer.Stop()
 	for {
 		select {
@@ -231,12 +204,10 @@ func (m *Manager) run(ctx context.Context, t check.Target, now <-chan struct{}) 
 		case <-now:
 		}
 		st = m.round(ctx, t, st)
-		timer.Reset(interval - interval/10 + rand.N(interval/5+1)) //nolint:gosec // nur jitter
+		timer.Reset(interval - interval/10 + rand.N(interval/5+1)) //nolint:gosec
 	}
 }
 
-// restore holt offenen Vorfall und laufende Fehlerserie aus der Datenbank. Ohne das gaebe
-// es nach jedem Neustart oder Reload eine zweite Ausfall-Mail.
 func (m *Manager) restore(ctx context.Context, t check.Target) state {
 	var st state
 	inc, err := m.store.OpenIncidentFor(ctx, t.ID)
@@ -247,8 +218,6 @@ func (m *Manager) restore(ctx context.Context, t check.Target) state {
 		slog.Error("offenen vorfall laden", "target", t.ID, "err", err)
 	}
 
-	// fehler vor dem ende des letzten vorfalls zaehlen nicht mehr, nach einer pause beginnt
-	// die serie neu
 	end, err := m.store.LastIncidentEnd(ctx, t.ID)
 	if err != nil && ctx.Err() == nil {
 		slog.Error("letztes vorfallende laden", "target", t.ID, "err", err)
@@ -287,13 +256,11 @@ func (m *Manager) round(ctx context.Context, t check.Target, st state) state {
 	at := m.now()
 	res := m.check(ctx, t)
 	<-m.sem
-	// ein durch Reload oder Shutdown abgebrochener check ist kein ausfall
 	if ctx.Err() != nil {
 		return st
 	}
 	m.record(t.ID, at, res)
 
-	// die angefangene runde noch zu ende schreiben, auch wenn gleich ein Reload kommt
 	wctx := context.WithoutCancel(ctx)
 	if err := m.store.InsertCheck(wctx, t.ID, at, res); err != nil {
 		slog.Error("check speichern", "target", t.ID, "err", err)
@@ -304,7 +271,6 @@ func (m *Manager) round(ctx context.Context, t check.Target, st state) state {
 	case down:
 		id, err := m.store.OpenIncident(wctx, t.ID, nst.startedAt, nst.cause)
 		if errors.Is(err, store.ErrIncidentOpen) {
-			// restore ist gescheitert, der vorfall steht schon drin und bekommt keine zweite mail
 			inc, ferr := m.store.OpenIncidentFor(wctx, t.ID)
 			if ferr == nil {
 				nst.startedAt, nst.incident = inc.StartedAt, inc.ID
@@ -324,7 +290,6 @@ func (m *Manager) round(ctx context.Context, t check.Target, st state) state {
 		err := m.store.CloseIncident(wctx, st.incident, at)
 		if err != nil && !errors.Is(err, store.ErrNotFound) {
 			slog.Error("vorfall schliessen", "target", t.ID, "incident", st.incident, "err", err)
-			// offen lassen, der naechste erfolgreiche check versucht es noch einmal
 			nst.open = true
 			return nst
 		}
@@ -349,8 +314,6 @@ func (m *Manager) record(id int64, at time.Time, res check.Result) {
 	}
 }
 
-// notify schickt die Mail und merkt sie sich nur bei Erfolg, sonst holt retry sie nach.
-// Der SMTP-Fehler wird schon hier geloggt, retry braucht ihn nur fuer ErrLimit.
 func (m *Manager) notify(ctx context.Context, inc store.Incident) error {
 	if m.mail == nil {
 		return nil

@@ -13,9 +13,9 @@ import (
 func TestAllowed(t *testing.T) {
 	tests := []struct {
 		ip       string
-		strict   bool // ohne alles
-		loopback bool // mit test-hebel
-		listed   bool // ip ist aufloesung eines PrivateAllow-eintrags
+		strict   bool
+		loopback bool
+		listed   bool
 	}{
 		{"93.184.215.14", true, true, true},
 		{"2606:4700::6810:84e5", true, true, true},
@@ -31,8 +31,8 @@ func TestAllowed(t *testing.T) {
 		{"192.168.1.1", false, false, true},
 		{"100.64.0.1", false, false, true},
 		{"fd12:3456::1", false, false, true},
-		{"64:ff9b::a00:1", false, false, true},   // nat64 auf 10.0.0.1
-		{"2002:c0a8:101::1", false, false, true}, // 6to4 auf 192.168.1.1
+		{"64:ff9b::a00:1", false, false, true},
+		{"2002:c0a8:101::1", false, false, true},
 
 		{"172.32.0.1", true, true, true},
 		{"100.128.0.1", true, true, true},
@@ -45,7 +45,7 @@ func TestAllowed(t *testing.T) {
 		{"169.254.169.254", false, false, false},
 		{"::ffff:169.254.169.254", false, false, false},
 		{"64:ff9b::a9fe:a9fe", false, false, false},
-		{"64:ff9b:1::7f00:1", false, false, false}, // lokales nat64 ist immer zu
+		{"64:ff9b:1::7f00:1", false, false, false},
 		{"64:ff9b:1::a00:1", false, false, false},
 		{"64:ff9b:1::808:808", false, false, false},
 		{"64:ff9b:1:abcd::a9fe:a9fe", false, false, false},
@@ -79,7 +79,6 @@ func TestAllowed(t *testing.T) {
 		}
 	}
 
-	// nur die aufgeloesten ips zaehlen, nicht das ganze netz oder die ipv4 hinter nat64
 	extra := []netip.Addr{netip.MustParseAddr("10.0.0.5")}
 	for _, s := range []string{"10.0.0.6", "64:ff9b::a00:5", "fd00::a00:5"} {
 		if allowed(netip.MustParseAddr(s), false, extra, nil) {
@@ -87,7 +86,6 @@ func TestAllowed(t *testing.T) {
 		}
 	}
 
-	// eigene adressen sind auch oeffentlich, gelistet oder hinter nat64/6to4 zu
 	block := []netip.Addr{
 		netip.MustParseAddr("93.184.215.14"),
 		netip.MustParseAddr("2606:4700::6810:84e5"),
@@ -187,7 +185,6 @@ func TestPrivateAllow(t *testing.T) {
 			err:       "ziel gesperrt",
 		},
 		{
-			// derselbe host ueber einen anderen namen bekommt keine ausnahme
 			name:      "ip des eintrags direkt",
 			c:         Checker{PrivateAllow: []string{"proxy:443"}, lookup: lookup("10.0.0.5")},
 			connectTo: "10.0.0.5:443",

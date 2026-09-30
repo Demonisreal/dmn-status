@@ -6,11 +6,8 @@ import (
 	"time"
 )
 
-// DeviceMax ist deutlich laenger als SessionMax. Das cookie meldet niemanden an, es nimmt den
-// browser nur vom globalen login-limit aus, und das soll auch nach monaten ohne login greifen.
 const DeviceMax = 90 * 24 * time.Hour
 
-// CreateDevice merkt sich einen browser nach erfolgreichem Login. token gehoert ins Cookie.
 func (s *Store) CreateDevice(ctx context.Context) (string, error) {
 	token := rand.Text()
 	now := s.now().Unix()

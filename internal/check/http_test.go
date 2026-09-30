@@ -152,7 +152,6 @@ func TestHTTPBlocked(t *testing.T) {
 		t.Fatalf("got ok=%v err=%q", res.OK, res.Err)
 	}
 
-	// localhost wird aufgeloest und landet ebenfalls auf loopback
 	res = Checker{}.Run(context.Background(), httpTarget(strings.Replace(srv.URL, "127.0.0.1", "localhost", 1)))
 	if res.Err != "ziel gesperrt" {
 		t.Fatalf("localhost: got %q", res.Err)
@@ -177,7 +176,6 @@ func TestHTTPRefused(t *testing.T) {
 	}
 }
 
-// closedAddr liefert einen port, der eben noch belegt war und jetzt frei ist
 func closedAddr(t *testing.T) string {
 	t.Helper()
 	ln, err := net.Listen("tcp", "127.0.0.1:0")

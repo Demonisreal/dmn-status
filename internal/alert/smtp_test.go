@@ -24,7 +24,6 @@ import (
 
 var update = flag.Bool("update", false, "golden-dateien neu schreiben")
 
-// 14:03 in Berlin (MESZ)
 var start = time.Date(2026, 9, 17, 12, 3, 0, 0, time.UTC)
 
 func newMailer(t *testing.T, s *smtptest.Server, clock *testutil.Clock) *Mailer {
@@ -166,7 +165,6 @@ func TestLimit(t *testing.T) {
 		t.Fatalf("%d mails angekommen", n)
 	}
 
-	// die erste faellt nach einer stunde aus dem fenster, die zweite noch nicht
 	clock.Set(start.Add(time.Hour))
 	if err := m.Up(ctx, "Web", start, clock.Now()); err != nil {
 		t.Fatalf("nach einer stunde: %v", err)
@@ -190,7 +188,6 @@ func TestTestMailLimit(t *testing.T) {
 	if err := m.Test(ctx); !errors.Is(err, ErrLimit) {
 		t.Fatalf("testmail %d: %v, want ErrLimit", perHourTest+1, err)
 	}
-	// das eigene budget ist aufgebraucht, ausfall-mails gehen trotzdem raus
 	if err := m.Down(ctx, "Web", "timeout", start); err != nil {
 		t.Fatalf("ausfall-mail nach testmails: %v", err)
 	}
@@ -270,7 +267,6 @@ func TestGolden(t *testing.T) {
 			if bytes.Contains(bytes.ReplaceAll(got, []byte("\r\n"), nil), []byte("\n")) {
 				t.Error("zeilenende ohne CR")
 			}
-			// golden-dateien mit \n, sonst dreht git unter windows an den zeilenenden
 			got = bytes.ReplaceAll(got, []byte("\r\n"), []byte("\n"))
 
 			path := filepath.Join("testdata", tt.file)

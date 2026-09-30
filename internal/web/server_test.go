@@ -38,8 +38,6 @@ type env struct {
 	h     http.Handler
 }
 
-// newEnv baut den server mit echter datenbank und echtem manager. seed laeuft vor mgr.Start,
-// damit der manager vorhandene checks schon in den snapshot uebernimmt.
 func newEnv(t *testing.T, cfg config.Config, seed func(*store.Store)) *env {
 	t.Helper()
 	clock := testutil.NewClock(time.Date(2026, 9, 17, 12, 0, 0, 0, time.UTC))
@@ -52,7 +50,6 @@ func newEnv(t *testing.T, cfg config.Config, seed func(*store.Store)) *env {
 		seed(st)
 	}
 
-	// der checker bleibt leer, die ziele im test zeigen auf loopback und werden sofort gesperrt
 	mgr := monitor.New(st, check.Checker{}, nil)
 	ctx, cancel := context.WithCancel(context.Background())
 	if err := mgr.Start(ctx); err != nil {
@@ -107,7 +104,7 @@ func (e *env) session() (*http.Cookie, string) {
 	if err != nil {
 		e.t.Fatal(err)
 	}
-	return &http.Cookie{Name: e.s.sid, Value: token}, mask(sess.CSRF) //nolint:gosec // cookie fuer den request, attribute wertet der server nicht aus
+	return &http.Cookie{Name: e.s.sid, Value: token}, mask(sess.CSRF) //nolint:gosec
 }
 
 var csrfField = regexp.MustCompile(`name="csrf" value="([^"]+)"`)
@@ -243,7 +240,6 @@ func TestLimiter(t *testing.T) {
 		t.Errorf("nach dem fenster nicht aufgeraeumt, %d eintraege", len(l.ips))
 	}
 
-	// ein bekanntes geraet kommt am globalen limit vorbei, nicht am limit seiner ip
 	l = newLimiter()
 	l.global = window{start: now, n: loginGlobal}
 	for i := range loginPerIP {
@@ -262,7 +258,6 @@ func TestLoginBusy(t *testing.T) {
 	e.s.verify <- struct{}{}
 	e.s.verify <- struct{}{}
 
-	// bei vollem semaphor wartet der login, bis der client aufgibt
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
 	rec := e.serve(e.loginReq(password, "192.0.2.1:1000").WithContext(ctx))
@@ -290,8 +285,6 @@ func TestLoginFloodKeepsSemaphore(t *testing.T) {
 	}
 	legit := e.loginReq(password, "198.51.100.7:1000")
 
-	// solange der platz belegt ist, darf die gesperrte ip nur am limit haengen bleiben: eine
-	// Retry-After von einer sekunde hiesse, sie war schon am semaphor
 	e.s.verify <- struct{}{}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -359,7 +352,6 @@ func TestCSRF(t *testing.T) {
 		t.Errorf("mit token: %d %q", rec.Code, rec.Header().Get("Location"))
 	}
 
-	// login ohne das double-submit-cookie: die seite kommt mit hinweis und neuem token zurueck
 	e.admin()
 	page := e.get("/admin/login")
 	m := csrfField.FindStringSubmatch(page.Body.String())
@@ -690,7 +682,6 @@ func TestMetrics(t *testing.T) {
 		}
 	}
 
-	// die runner uebernehmen den letzten check erst beim anlaufen in den snapshot
 	for deadline := time.Now().Add(5 * time.Second); len(e.mgr.Snapshot()) < 2; time.Sleep(time.Millisecond) {
 		if time.Now().After(deadline) {
 			t.Fatal("snapshot bleibt leer")
@@ -764,7 +755,6 @@ func TestAdminForm(t *testing.T) {
 	}
 	id := list[0].ID
 	path := "/admin/ziel/" + strconv.FormatInt(id, 10)
-	// CheckNow findet nur einen runner, wenn Reload ihn gestartet hat
 	if !e.mgr.CheckNow(id) {
 		t.Error("kein runner nach dem anlegen")
 	}
@@ -776,7 +766,6 @@ func TestAdminForm(t *testing.T) {
 		t.Error("flash aus beliebigem parameter")
 	}
 
-	// die sperrfrist greift erst, wenn ein anstoss beim runner angekommen ist
 	deadline := time.Now().Add(2 * time.Second)
 	for {
 		loc := e.post(path+"/pruefen", url.Values{"csrf": {token}}, sid).Header().Get("Location")
@@ -863,7 +852,6 @@ func TestPauseEndsIncident(t *testing.T) {
 		"knopf":    func() *httptest.ResponseRecorder { return e.post(path+"/pause", url.Values{"csrf": {token}}, sid) },
 		"formular": func() *httptest.ResponseRecorder { return e.post(path, paused, sid) },
 	} {
-		// fortsetzen ueber das formular ohne paused
 		if rec := e.post(path, form, sid); rec.Code != http.StatusSeeOther {
 			t.Fatalf("%s: fortsetzen %d", name, rec.Code)
 		}

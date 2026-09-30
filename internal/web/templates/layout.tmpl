@@ -30,8 +30,6 @@
       <img src="/static/icon.svg?v={{.Version}}" alt="" width="28" height="28">
       <span>DMN<span class="slash">/</span><span class="soft">Software</span></span>
     </a>
-    {{- /* sprachwahl steht zweimal: mobil sitzt sie in der markenzeile und muss in der tab-reihenfolge vor der navigation kommen,
-       auf dem desktop rechts aussen wie auf der website. per css ist immer nur eine sichtbar */}}
     {{- if .AltURL}}
     <nav class="lang lang-m" aria-label="{{t .Lang "lang.label"}}">{{template "langlinks" .}}</nav>
     {{- end}}

@@ -34,7 +34,6 @@ func TestHTTPKeywordBody(t *testing.T) {
 	fits := strings.Repeat("x", maxBody-len(kw)) + kw
 	cut := strings.Repeat("x", maxBody-len(kw)+1) + kw
 	zipped := gzipped(t, []byte("<p>"+kw+"</p>"))
-	// 64 MiB nullen werden zu wenigen KiB, gelesen wird trotzdem nur 1 MiB entpackt
 	bomb := gzipped(t, make([]byte, 64<<20), []byte(kw))
 
 	mux := http.NewServeMux()
