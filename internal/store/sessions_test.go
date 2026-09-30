@@ -59,7 +59,6 @@ func TestSessionMaxAge(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// alle 6 stunden aktiv, trotzdem ist nach 7 tagen schluss
 	for elapsed := 6 * time.Hour; elapsed < SessionMax; elapsed += 6 * time.Hour {
 		clock.Set(start.Add(elapsed))
 		if err := s.TouchSession(ctx, token); err != nil {

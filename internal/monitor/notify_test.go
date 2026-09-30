@@ -94,7 +94,6 @@ func TestRetryGivesUpAfterSecondFailure(t *testing.T) {
 	}
 }
 
-// am limit ist die mail nie beim server angekommen, der naechste lauf versucht es wieder
 func TestRetryKeepsTryingOnErrLimit(t *testing.T) {
 	f := newFake(t)
 	ctx := context.Background()
@@ -115,7 +114,6 @@ func TestRetryKeepsTryingOnErrLimit(t *testing.T) {
 	for range 10 {
 		m.retry(ctx)
 	}
-	// der erste lauf merkt sich die mail nur
 	if n := attempts.Load(); n != 9 {
 		t.Fatalf("%d versuche am limit, want 9", n)
 	}
@@ -132,7 +130,6 @@ func TestRetryKeepsTryingOnErrLimit(t *testing.T) {
 	}
 }
 
-// restore hat den offenen vorfall nicht gesehen: round findet ihn beim eroeffnen und mailt nicht
 func TestRoundKeepsExistingIncident(t *testing.T) {
 	f := newFake(t)
 	ctx := context.Background()

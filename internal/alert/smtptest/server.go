@@ -1,5 +1,3 @@
-// Package smtptest startet einen minimalen SMTP-Server mit implizitem TLS fuer Tests.
-// Er versteht nur das, was net/smtp fuer AUTH PLAIN und eine Mail braucht.
 package smtptest
 
 import (
@@ -23,7 +21,7 @@ import (
 type Message struct {
 	From string
 	To   []string
-	Data []byte // zeilenenden als \n, punkte schon entstopft
+	Data []byte
 }
 
 type Server struct {
@@ -40,7 +38,6 @@ type Server struct {
 	changed  chan struct{}
 }
 
-// Start lauscht auf 127.0.0.1 mit zufaelligem Port. Aufgeraeumt wird ueber t.Cleanup.
 func Start(t testing.TB, user, pass string) *Server {
 	t.Helper()
 
@@ -75,11 +72,8 @@ func Start(t testing.TB, user, pass string) *Server {
 
 func (s *Server) Addr() string { return s.ln.Addr().String() }
 
-// CertPool enthaelt nur das selbst signierte Zertifikat, gedacht fuer tls.Config.RootCAs.
 func (s *Server) CertPool() *x509.CertPool { return s.pool }
 
-// FailData laesst die naechsten n Mails nach dem abschliessenden Punkt mit 451 scheitern.
-// Der Inhalt ist dann schon uebertragen, wird aber nicht gespeichert.
 func (s *Server) FailData(n int) {
 	s.mu.Lock()
 	s.failData = n
@@ -92,7 +86,6 @@ func (s *Server) Messages() []Message {
 	return append([]Message(nil), s.msgs...)
 }
 
-// Wait blockiert, bis mindestens n Mails angekommen sind, und bricht den Test sonst ab.
 func (s *Server) Wait(t testing.TB, n int, timeout time.Duration) []Message {
 	t.Helper()
 	deadline := time.NewTimer(timeout)
@@ -221,7 +214,6 @@ func (s *Server) checkPlain(resp string) bool {
 	if err != nil {
 		return false
 	}
-	// authzid \0 authcid \0 passwort, authzid darf leer sein
 	parts := bytes.Split(raw, []byte{0})
 	return len(parts) == 3 && string(parts[1]) == s.user && string(parts[2]) == s.pass
 }
@@ -241,7 +233,6 @@ func (s *Server) store(m Message) bool {
 	return true
 }
 
-// addr holt die adresse aus "FROM:<a@b>" bzw. "TO:<a@b>", parameter dahinter fallen weg
 func addr(arg string) string {
 	_, rest, _ := strings.Cut(arg, "<")
 	a, _, _ := strings.Cut(rest, ">")

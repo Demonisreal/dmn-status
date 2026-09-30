@@ -15,7 +15,6 @@ func TestRollup(t *testing.T) {
 	id := newTarget(t, s, "Website", true)
 	cur := time.Unix(hourStart(start), 0).UTC()
 
-	// vorige stunde: 20 erfolgreiche mit 1..20 ms und 5 fehlschlaege mit 10 s
 	prev := cur.Add(-time.Hour)
 	for i := 1; i <= 20; i++ {
 		addCheck(t, s, id, prev.Add(time.Duration(i)*time.Minute), check.Result{OK: true, LatencyMs: i})
@@ -23,7 +22,6 @@ func TestRollup(t *testing.T) {
 	for i := range 5 {
 		addCheck(t, s, id, prev.Add(time.Duration(40+i)*time.Minute), check.Result{LatencyMs: 10000})
 	}
-	// vorvorige stunde nur fehlschlaege, dritte stunde zurueck und laufende bleiben draussen
 	addCheck(t, s, id, cur.Add(-90*time.Minute), check.Result{LatencyMs: 10000})
 	addCheck(t, s, id, cur.Add(-150*time.Minute), check.Result{OK: true, LatencyMs: 5})
 	addCheck(t, s, id, cur.Add(time.Minute), check.Result{OK: true, LatencyMs: 5})
@@ -45,7 +43,6 @@ func TestRollup(t *testing.T) {
 		return r
 	}
 
-	// avg (1+..+20)/20 = 10 (ganzzahlig), p95 nearest rank = 19. wert
 	if got, want := read(prev), (row{25, 20, 10, 19, 20}); got != want {
 		t.Errorf("vorige stunde %+v, want %+v", got, want)
 	}
@@ -94,12 +91,12 @@ func TestUptime(t *testing.T) {
 		ago       int64
 		total, ok int
 	}{
-		{2, 10, 5},     // 24h
-		{23, 10, 10},   // aelteste stunde, die in 24h noch zaehlt
-		{24, 100, 0},   // nur 7d
-		{167, 10, 10},  // aelteste in 7d
-		{500, 20, 0},   // nur 30d
-		{720, 1000, 0}, // ausserhalb
+		{2, 10, 5},
+		{23, 10, 10},
+		{24, 100, 0},
+		{167, 10, 10},
+		{500, 20, 0},
+		{720, 1000, 0},
 	}
 	for _, h := range hourly {
 		exec(t, s, `insert into hourly values (?, ?, ?, ?, 0, 0, 0)`, id, cur-h.ago*hour, h.total, h.ok)
@@ -120,8 +117,6 @@ func TestUptime(t *testing.T) {
 		t.Fatalf("uptime %+v, want %+v", u, want)
 	}
 
-	// eine stunde spaeter faellt die aelteste 24h-stunde raus, die rohen checks stehen jetzt
-	// in der vorigen stunde und sind ohne rollup nicht mehr gezaehlt
 	clock.Advance(time.Hour)
 	u, err = s.Uptime(ctx, id)
 	if err != nil {
@@ -179,7 +174,6 @@ func TestLatency(t *testing.T) {
 	ctx := context.Background()
 	id := newTarget(t, s, "Website", true)
 
-	// zwei checks im selben 10-minuten-schritt, einer fehlgeschlagen, einer vor 25 stunden
 	addCheck(t, s, id, start.Add(-3*time.Minute), check.Result{OK: true, LatencyMs: 100})
 	addCheck(t, s, id, start.Add(-2*time.Minute), check.Result{OK: true, LatencyMs: 300})
 	addCheck(t, s, id, start.Add(-1*time.Minute), check.Result{LatencyMs: 10000})

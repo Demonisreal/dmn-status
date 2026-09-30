@@ -39,7 +39,6 @@ func TestLimitCountsFailedAttempts(t *testing.T) {
 			t.Fatalf("versuch %d: %v", i+1, err)
 		}
 	}
-	// der 21. versuch waehlt gar nicht erst
 	if err := m.Down(ctx, "Web", "timeout", start); !errors.Is(err, ErrLimit) {
 		t.Errorf("21. versuch: %v", err)
 	}
@@ -61,7 +60,6 @@ func TestBadFromKeepsLimit(t *testing.T) {
 	}
 }
 
-// silentTLS nimmt verbindungen an, macht den handshake und schweigt dann
 func silentTLS(t *testing.T) (addr string, pool *x509.CertPool) {
 	t.Helper()
 	srv := httptest.NewUnstartedServer(nil)
@@ -108,7 +106,6 @@ func TestSendAbortsOnSilentServer(t *testing.T) {
 		Now:  testutil.NewClock(start).Now,
 	}
 
-	// net/smtp wartet ohne frist auf den gruss, nur der context bricht das ab
 	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 	defer cancel()
 	began := time.Now()
@@ -147,7 +144,6 @@ func TestSendRejectsUntrustedTLS(t *testing.T) {
 	}
 }
 
-// ein server ohne TLS bekommt weder AUTH noch passwort zu sehen
 func TestSendNoPlaintext(t *testing.T) {
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {

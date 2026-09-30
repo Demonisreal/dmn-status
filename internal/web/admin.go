@@ -20,8 +20,6 @@ import (
 
 const maxForm = 64 << 10
 
-// ?ok= waehlt nur aus dieser liste, eigener text laesst sich so nicht einschleusen.
-// warn heisst, die aktion ist nicht durchgelaufen.
 var flashes = map[string]struct {
 	key  string
 	warn bool
@@ -37,8 +35,6 @@ var flashes = map[string]struct {
 	"csrf":        {"adm.csrf", true},
 }
 
-// mask macht das token in jeder antwort anders (BREACH). Vorne steht das zufallspad, dahinter
-// das token xor pad.
 func mask(token string) string {
 	n := len(token)
 	b := make([]byte, 2*n)
@@ -62,7 +58,7 @@ func validToken(masked, want string) bool {
 }
 
 func (s *server) cookie(name, value string, maxAge int, site http.SameSite) *http.Cookie {
-	//nolint:gosec // Secure kommt aus COOKIE_SECURE, standard an, aus nur fuer lokales http
+	//nolint:gosec
 	return &http.Cookie{
 		Name:     name,
 		Value:    value,
@@ -87,8 +83,6 @@ func parseForm(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
-// admin prueft die sitzung und bei POST das csrf-token. Der handler bekommt das maskierte
-// token fuer die formulare der antwort.
 func (s *server) admin(h func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -107,7 +101,6 @@ func (s *server) admin(h func(http.ResponseWriter, *http.Request, string)) http.
 			s.fail(w, r, err)
 			return
 		}
-		// sonst schreibt jeder seitenaufruf in die datenbank
 		if s.Now().Sub(sess.LastSeen) >= time.Minute {
 			if err := s.Store.TouchSession(ctx, c.Value); err != nil && !errors.Is(err, store.ErrNotFound) {
 				slog.Warn("sitzung verlaengern", "err", err)
@@ -118,7 +111,6 @@ func (s *server) admin(h func(http.ResponseWriter, *http.Request, string)) http.
 			if !parseForm(w, r) {
 				return
 			}
-			// meist ein alter tab nach neuem login, die liste zeigt dann den hinweis
 			if !validToken(r.PostForm.Get("csrf"), sess.CSRF) {
 				http.Redirect(w, r, "/admin/?ok=csrf", http.StatusSeeOther)
 				return
@@ -153,7 +145,6 @@ func (s *server) login(w http.ResponseWriter, r *http.Request) {
 	}
 	user, password := r.PostForm.Get("username"), r.PostForm.Get("password")
 
-	// vor dem login gibt es keine sitzung, also double-submit gegen das cookie
 	c, err := r.Cookie(s.lcsrf)
 	if err != nil || !validToken(r.PostForm.Get("csrf"), c.Value) {
 		token := rand.Text()
@@ -172,8 +163,6 @@ func (s *server) login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	// das limit kommt vor dem semaphor, sonst blockiert eine flut von einer gesperrten ip
-	// die argon2-plaetze fuer alle anderen
 	if wait, first := s.limit.take(ip, s.Now(), known); wait > 0 {
 		if first {
 			slog.Warn("login gesperrt", "ip", ip)
@@ -217,7 +206,6 @@ func (s *server) login(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, s.cookie(s.sid, token, 0, http.SameSiteLaxMode))
 	if !known {
-		// das geraete-cookie ist nur komfort, die sitzung steht schon
 		if dev, err := s.Store.CreateDevice(r.Context()); err != nil {
 			slog.Warn("geraet merken", "err", err)
 		} else {
@@ -228,8 +216,6 @@ func (s *server) login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/admin/", http.StatusSeeOther)
 }
 
-// checkLogin laesst in jedem fall genau einen argon2-lauf laufen, die antwortzeit soll weder
-// den benutzernamen noch einen fehlenden admin verraten
 func (s *server) checkLogin(ctx context.Context, user, password string) (bool, error) {
 	name, hash, err := s.Store.Admin(ctx)
 	if errors.Is(err, store.ErrNotFound) {
@@ -322,7 +308,6 @@ func (s *server) newForm(w http.ResponseWriter, r *http.Request, csrf string) {
 	s.render(w, r, http.StatusOK, "admin_form", f)
 }
 
-// target laedt das ziel aus dem pfad. false heisst, die antwort ist schon geschrieben.
 func (s *server) target(w http.ResponseWriter, r *http.Request) (check.Target, bool) {
 	id, ok := pathID(r)
 	if !ok {
@@ -370,8 +355,6 @@ func (s *server) save(w http.ResponseWriter, r *http.Request, csrf string) {
 	t.Public = f.Get("public") == "1"
 	t.Paused = f.Get("paused") == "1"
 
-	// eine kaputte zahl laesst den bisherigen wert stehen: das formular zeigt dann keine 0, und
-	// die timeout-pruefung rechnet weiter mit einem sinnvollen intervall
 	bad := map[string]bool{}
 	for key, dst := range map[string]*int{"interval_s": &t.IntervalS, "timeout_ms": &t.TimeoutMs, "fail_threshold": &t.FailThreshold} {
 		n, err := strconv.Atoi(strings.TrimSpace(f.Get(key)))
@@ -475,7 +458,6 @@ func (s *server) testMail(w http.ResponseWriter, r *http.Request, _ string) {
 	if s.Mailer == nil {
 		flash = "keinmail"
 	} else {
-		// unter dem WriteTimeout des servers bleiben, sonst sieht der browser nur einen abbruch
 		ctx, cancel := context.WithTimeout(r.Context(), 20*time.Second)
 		defer cancel()
 		if err := s.Mailer.Test(ctx); err != nil {

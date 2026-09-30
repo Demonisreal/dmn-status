@@ -4,7 +4,6 @@
 
 {{define "main"}}
 <div class="wrap page">
-  {{- /* data-live markiert, was der 60-sekunden-takt austauscht; alles andere bleibt stehen */}}
   {{- with .Target}}
   <div class="now" data-live>
     <p class="crumb"><a href="{{base $.Lang}}/">Status</a><span class="sep" aria-hidden="true">/</span><span>{{.Name}}</span></p>

@@ -1,4 +1,3 @@
-// Package testutil enthaelt Hilfen, die mehrere Pakete in Tests brauchen.
 package testutil
 
 import (
@@ -6,7 +5,6 @@ import (
 	"time"
 )
 
-// Clock ist eine Uhr, die nur weiterlaeuft, wenn der Test es sagt.
 type Clock struct {
 	mu  sync.Mutex
 	now time.Time

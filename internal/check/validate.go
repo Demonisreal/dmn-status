@@ -14,9 +14,6 @@ import (
 
 var hostname = regexp.MustCompile(`^([A-Za-z0-9_]([A-Za-z0-9_-]{0,61}[A-Za-z0-9])?\.)*[A-Za-z0-9_]([A-Za-z0-9_-]{0,61}[A-Za-z0-9])?\.?$`)
 
-// Validate prueft die Eingaben aus dem Admin-Formular. Schluessel sind die Spaltennamen
-// (name, kind, address, expect_status, keyword, connect_to, interval_s, timeout_ms,
-// fail_threshold), leere Map heisst gueltig.
 func Validate(t Target) map[string]string {
 	errs := map[string]string{}
 
@@ -64,7 +61,6 @@ func Validate(t Target) map[string]string {
 		errs["fail_threshold"] = "Liegt außerhalb von 1 bis 20"
 	}
 
-	// zuletzt, damit diese meldung eine laengen- oder formatmeldung ueberschreibt
 	for key, v := range map[string]string{"name": t.Name, "address": t.Address, "keyword": t.Keyword, "connect_to": t.ConnectTo} {
 		if strings.ContainsFunc(v, hidden) {
 			errs[key] = "Keine Steuer- oder Formatzeichen"
@@ -105,8 +101,6 @@ func validHost(h string) bool {
 	return len(h) <= 253 && hostname.MatchString(h)
 }
 
-// hidden trifft auch Formatzeichen wie U+202E oder U+200B, die im Admin Text umdrehen oder
-// unsichtbar machen und von unicode.IsControl nicht erfasst werden.
 func hidden(r rune) bool {
 	return unicode.IsControl(r) || unicode.Is(unicode.Cf, r)
 }

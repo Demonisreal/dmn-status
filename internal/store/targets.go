@@ -20,8 +20,6 @@ func scanTarget(sc scanner) (check.Target, error) {
 	return t, err
 }
 
-// CreateTarget legt ein Ziel an und gibt die neue ID zurueck. ID, CreatedAt und UpdatedAt
-// in t werden ignoriert.
 func (s *Store) CreateTarget(ctx context.Context, t check.Target) (int64, error) {
 	now := s.now().Unix()
 	res, err := s.w.ExecContext(ctx, `insert into targets (name, kind, address, expect_status, keyword,
@@ -44,7 +42,6 @@ func (s *Store) UpdateTarget(ctx context.Context, t check.Target) error {
 		t.FailThreshold, t.Public, t.Paused, t.Sort, s.now().Unix(), t.ID))
 }
 
-// DeleteTarget loescht das Ziel samt Checks, Stundenwerten und Vorfaellen.
 func (s *Store) DeleteTarget(ctx context.Context, id int64) error {
 	return affected(s.w.ExecContext(ctx, `delete from targets where id = ?`, id))
 }
@@ -62,7 +59,6 @@ func (s *Store) Target(ctx context.Context, id int64) (check.Target, error) {
 	return t, err
 }
 
-// Targets liefert alle Ziele in Anzeigereihenfolge.
 func (s *Store) Targets(ctx context.Context) ([]check.Target, error) {
 	return s.targets(ctx, `select `+targetCols+` from targets order by sort, id`)
 }

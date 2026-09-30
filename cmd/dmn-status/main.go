@@ -1,4 +1,3 @@
-// dmn-status prueft Dienste und zeigt ihren Zustand an. Aufruf ohne Argumente zeigt die Befehle.
 package main
 
 import (
@@ -29,7 +28,6 @@ import (
 	"github.com/Demonisreal/dmn-status/internal/web"
 )
 
-// wird beim build per -ldflags "-X main.version=..." gesetzt
 var version = "dev"
 
 const usage = `dmn-status serve
@@ -177,8 +175,6 @@ func serve() error {
 	return err
 }
 
-// selfAddrs loest den Host aus BASE_URL einmal beim Start auf. Ein Check auf diese Adressen
-// liefe ueber den eigenen Proxy zurueck. Ohne Aufloesung laeuft der Dienst ohne Sperre weiter.
 func selfAddrs(ctx context.Context, baseURL string) []netip.Addr {
 	if baseURL == "" {
 		slog.Warn("BASE_URL fehlt, eigene adresse wird fuer checks nicht gesperrt")
@@ -200,8 +196,6 @@ func selfAddrs(ctx context.Context, baseURL string) []netip.Addr {
 	var out []netip.Addr
 	for _, ip := range ips {
 		ip = ip.WithZone("").Unmap()
-		// bei split-dns kaeme hier eine interne adresse, die gehoert eher zu PRIVATE_ALLOW.
-		// block wird vor PRIVATE_ALLOW geprueft und wuerde den eintrag sonst sperren.
 		if !ip.IsPrivate() && !ip.IsLoopback() && !cgnat.Contains(ip) {
 			out = append(out, ip)
 		}
@@ -212,8 +206,6 @@ func selfAddrs(ctx context.Context, baseURL string) []netip.Addr {
 	return out
 }
 
-// bootstrap legt den Admin aus ADMIN_USER/ADMIN_PASSWORD an, solange noch keiner existiert.
-// Danach wird die Variable ignoriert, ein Passwortwechsel geht nur ueber set-password.
 func bootstrap(ctx context.Context, st *store.Store, user, password string) error {
 	_, _, err := st.Admin(ctx)
 	switch {
@@ -244,7 +236,6 @@ func setPassword(ctx context.Context, st *store.Store, name string, in io.Reader
 	if err != nil && !errors.Is(err, io.EOF) {
 		return err
 	}
-	// nur das zeilenende abschneiden, leerzeichen am rand gehoeren zum passwort
 	password := strings.TrimSuffix(strings.TrimSuffix(line, "\n"), "\r")
 	if utf8.RuneCountInString(password) < 12 {
 		return errors.New("passwort: mindestens 12 zeichen")

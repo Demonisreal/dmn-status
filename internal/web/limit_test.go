@@ -31,7 +31,6 @@ func (e *env) loginReq(pass, remote string) *http.Request {
 	return req
 }
 
-// loginFrom schickt einen login mit frei waehlbaren X-Forwarded-For-Headern
 func (e *env) loginFrom(pass, remote string, xff ...string) *httptest.ResponseRecorder {
 	e.t.Helper()
 	req := e.loginReq(pass, remote)
@@ -54,7 +53,6 @@ func TestLoginLimitIgnoresSpoofedXFF(t *testing.T) {
 	e := newEnv(t, config.Config{}, nil)
 	e.admin()
 
-	// ohne TRUSTED_PROXY darf ein wechselnder header keine neuen versuche freischalten
 	for i, xff := range []string{"198.51.100.1", "198.51.100.2", "198.51.100.3", "198.51.100.4", "198.51.100.5"} {
 		if rec := e.loginFrom("falsch", "203.0.113.9:1000", xff); rec.Code != http.StatusUnauthorized {
 			t.Fatalf("versuch %d: status %d", i+1, rec.Code)
@@ -70,7 +68,6 @@ func TestLoginLimitBehindProxy(t *testing.T) {
 	e.admin()
 	const proxy = "172.18.0.2:4000"
 
-	// der client kann nur eintraege vor dem letzten faelschen, der letzte kommt vom proxy
 	e.burn(proxy, "10.9.9.9, 198.51.100.7")
 	if rec := e.loginFrom(password, proxy, "1.1.1.1, 198.51.100.7"); rec.Code != http.StatusTooManyRequests {
 		t.Errorf("gefaelschter vorderer eintrag: status %d", rec.Code)
@@ -78,7 +75,6 @@ func TestLoginLimitBehindProxy(t *testing.T) {
 	if rec := e.loginFrom(password, proxy, "198.51.100.8"); rec.Code != http.StatusSeeOther {
 		t.Errorf("anderer client hinter dem proxy gesperrt: %d", rec.Code)
 	}
-	// ohne header zaehlt der proxy selbst, der ist noch frei
 	if rec := e.loginFrom(password, proxy); rec.Code != http.StatusSeeOther {
 		t.Errorf("proxy ohne header: %d", rec.Code)
 	}
@@ -160,7 +156,7 @@ func TestKnownDevice(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var c *http.Cookie
 			if tt.cookie != "" {
-				c = &http.Cookie{Name: tt.cookie, Value: tt.value} //nolint:gosec // cookie fuer den request, attribute wertet der server nicht aus
+				c = &http.Cookie{Name: tt.cookie, Value: tt.value} //nolint:gosec
 			}
 			if rec := with(c, password, "198.51.100.2:1000"); rec.Code != http.StatusTooManyRequests {
 				t.Errorf("status %d", rec.Code)
@@ -168,7 +164,6 @@ func TestKnownDevice(t *testing.T) {
 		})
 	}
 
-	// das ip-limit gilt auch fuer ein bekanntes geraet
 	for i := range loginPerIP {
 		if rec := with(dev, "falsch", "198.51.100.3:1000"); rec.Code != http.StatusUnauthorized {
 			t.Fatalf("versuch %d: %d", i+1, rec.Code)

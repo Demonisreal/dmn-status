@@ -1,5 +1,3 @@
-/* abgeleitet aus dmn_website/web/site.css @1e7b093 */
-
 :root {
   --dark: #0b0b0d;
   --card: #14151a;
@@ -7,14 +5,11 @@
   --white: #ffffff;
   --text: #b9bcc4;
   --muted: #8f939c;
-  /* markengrau aus dem lockup; auf dem dunklen grund nur als hairline lesbar, nie als text */
   --line: #3f4249;
 
   --ink: #101114;
   --edge: #25272d;
-  /* --red kommt auf --dark nur auf 4.1:1, fuer kleinen roten text reicht das nicht */
   --red-hi: #f0414f;
-  /* nur fuer den livestatus, kein zweiter akzent */
   --green: #3fb27f;
 
   --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -51,7 +46,6 @@ body {
   font: 1rem/1.65 var(--sans);
 }
 
-/* korn liegt ueber allem, sonst sehen die flaechen glatter aus als der grund */
 body::after {
   content: "";
   position: fixed;
@@ -126,11 +120,8 @@ a:focus-visible {
 
 .skip:focus { transform: none; }
 
-/* header */
-
 .top {
   position: sticky;
-  /* mobil rutscht die markenzeile weg, die navigation bleibt oben stehen */
   top: -3.25rem;
   z-index: 50;
   border-bottom: 1px solid var(--edge);
@@ -201,7 +192,6 @@ a:focus-visible {
   transition: color 150ms ease-out, transform 160ms var(--ease);
 }
 
-/* abmelden ist ein formular, soll aber aussehen wie die links daneben */
 .nav button {
   margin: 0;
   border: 0;
@@ -256,7 +246,6 @@ a:focus-visible {
     border: 0;
   }
 
-  /* der letzte navpunkt schliesst mit seiner textkante am container ab, nicht mit dem padding */
   .nav ul {
     gap: .125rem;
     margin-inline-end: -.75rem;
@@ -303,7 +292,6 @@ a:focus-visible {
 .lang {
   display: flex;
   align-items: center;
-  /* die textkante von EN schliesst am container ab, nicht die trefferflaeche */
   margin-inline-end: -.875rem;
   color: var(--muted);
   font: 500 .8125rem/1 var(--mono);
@@ -377,8 +365,6 @@ a:focus-visible {
 .go:active,
 .foot a:active { transform: scale(.97); }
 
-/* kopf der seiten */
-
 .page { padding-block: 2rem 1rem; }
 
 .crumb {
@@ -412,8 +398,6 @@ a:focus-visible {
   text-wrap: balance;
 }
 
-/* bei zwei zeilen soll der punkt an der ersten zeile stehen, nicht in der mitte.
-   .6em ist die mitte der versalhoehe in der ersten zeile, abzueglich des halben punkts */
 .now h1 .led {
   width: .625rem;
   height: .625rem;
@@ -441,8 +425,6 @@ a:focus-visible {
 @media (min-width: 64rem) {
   .page { padding-block: 3rem 1.5rem; }
 }
-
-/* abschnitte */
 
 .blk {
   padding-block: 2.5rem 0;
@@ -493,8 +475,6 @@ a:focus-visible {
   .blk h2 { font-size: 1.625rem; }
 }
 
-/* livestatus: text steht immer daneben, die farbe ist nur zusatz */
-
 .led {
   flex: none;
   display: inline-block;
@@ -512,7 +492,6 @@ a:focus-visible {
   box-shadow: inset 0 0 0 1.5px var(--muted);
 }
 
-/* --line kommt auf --dark nur auf 2:1, der rahmen verschwindet dann fast; --muted wie beim knopf */
 .kind,
 .tag {
   flex: none;
@@ -529,8 +508,6 @@ a:focus-visible {
   color: var(--red-hi);
 }
 
-/* legende ueber der liste */
-
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -544,14 +521,12 @@ a:focus-visible {
   gap: .375rem;
 }
 
-/* etwas breiter als ein segment, sonst liest sich der stummel wie ein komma */
 .sw {
   width: .3125rem;
   height: .875rem;
   background: var(--line);
 }
 
-/* hoehen im verhaeltnis wie die balken: 18 zu 24, damit der zustand nicht nur an der farbe haengt */
 .sw-up {
   align-self: flex-end;
   height: .65rem;
@@ -566,8 +541,6 @@ a:focus-visible {
   height: .1875rem;
   margin-bottom: .3rem;
 }
-
-/* zielliste */
 
 .svc {
   margin: 0;
@@ -606,7 +579,6 @@ a:focus-visible {
   overflow-wrap: anywhere;
 }
 
-/* die ganze kopfzeile ist trefferflaeche fuer den link, nicht nur der name */
 .svc-n a::after {
   content: "";
   position: absolute;
@@ -640,7 +612,6 @@ a:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
-/* schmal bricht die spielerzahl ohnehin um, ein punkt am zeilenanfang saehe verloren aus */
 @media (min-width: 48rem) {
   .now .svc-s .fm { flex-basis: auto; }
 
@@ -665,9 +636,6 @@ a:focus-visible {
 .bar-down { color: var(--red-hi); }
 .bar-none { color: var(--line); }
 
-/* 90 segmente auf 320 px: die luecke von einem viertel schritt liest sich dort als zaun.
-   der strich in der fuellfarbe holt die zellen wieder zusammen und bleibt dank
-   non-scaling-stroke unabhaengig davon, wie weit das svg gestreckt wird */
 @media (max-width: 47.99rem) {
   .hours.dense rect {
     stroke: currentColor;
@@ -725,8 +693,6 @@ a:focus-visible {
   .ups dd { font-size: .875rem; }
 }
 
-/* kennzahlen auf der detailseite */
-
 .ups.wide {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -767,8 +733,6 @@ a:focus-visible {
   }
 }
 
-/* zeitraum, wie die stufen der score-skizze auf der website */
-
 .range { margin-top: 1.5rem; }
 
 .range ul {
@@ -808,8 +772,6 @@ a:focus-visible {
   .range a:hover { color: var(--white); }
 }
 
-/* diagramme */
-
 .lat { margin: 1.25rem 0 0; }
 
 .lat svg:not(.hours) {
@@ -828,8 +790,6 @@ a:focus-visible {
   vector-effect: non-scaling-stroke;
 }
 
-/* --edge ist als flaechentrenner gedacht und geht im diagramm unter, die linien liegen
-   wie die draehte der architektur-skizze auf --line */
 .lat .grid {
   stroke: var(--line);
   vector-effect: non-scaling-stroke;
@@ -846,8 +806,6 @@ a:focus-visible {
   color: var(--muted);
   font: .75rem/1.5 var(--mono);
 }
-
-/* vorfaelle */
 
 .inc {
   margin: 0;
@@ -901,8 +859,6 @@ a:focus-visible {
   }
 }
 
-/* so funktioniert's */
-
 .how {
   display: grid;
   gap: 2rem;
@@ -940,7 +896,6 @@ a:focus-visible {
   font-size: 12px;
 }
 
-/* schmal wird das svg verkleinert, 12px waeren dann zu klein */
 .arch .arch-v text { font-size: 13px; }
 
 .arch .wire {
@@ -995,8 +950,6 @@ a:focus-visible {
   }
 }
 
-/* hinweise */
-
 .note {
   max-width: 42rem;
   margin: 1.25rem 0 0;
@@ -1019,8 +972,6 @@ a:focus-visible {
   margin-top: .3em;
   color: var(--red-hi);
 }
-
-/* 404 */
 
 .lost {
   display: grid;
@@ -1075,7 +1026,6 @@ a:focus-visible {
 .go.quiet {
   color: var(--text);
   font-weight: 500;
-  /* --line waere hier unter 3:1, die linie muss als einziges signal fuer den link reichen */
   text-decoration-color: var(--muted);
   text-decoration-thickness: 1px;
 }
@@ -1094,8 +1044,6 @@ a:focus-visible {
 
   .lost-code { margin: 0; }
 }
-
-/* admin: panel und formular */
 
 .sk {
   overflow: hidden;
@@ -1256,7 +1204,6 @@ fieldset {
   font: 500 .8125rem/1.6 var(--mono);
 }
 
-/* die radios stehen in einem .field und erben sonst hoehe und innenabstand der textfelder */
 .opts input,
 .check input {
   align-self: start;
@@ -1312,7 +1259,6 @@ fieldset {
   transition: transform 160ms var(--ease);
 }
 
-/* roter ring auf rotem knopf waere nicht zu sehen */
 .send:focus-visible {
   outline: 2px solid var(--white);
   outline-offset: 3px;
@@ -1374,8 +1320,6 @@ fieldset {
     color: var(--white);
   }
 }
-
-/* admin: liste */
 
 .adm-head {
   display: flex;
@@ -1468,7 +1412,6 @@ fieldset {
 
 .adm-x form { display: contents; }
 
-/* vier knoepfe passen mobil nicht in eine zeile, zwei gleich breite spalten statt einem einzelnen umbruch */
 @media (max-width: 39.99rem) {
   .adm-x {
     display: grid;
@@ -1489,8 +1432,6 @@ fieldset {
 .del form { display: block; }
 .del .btn.warn { margin-top: .375rem; }
 
-/* sobald die knopfreihe nebeneinander steht, kommt die bestaetigung daneben statt darunter,
-   sonst waechst die zeile beim aufklappen und die liste darunter springt */
 @media (min-width: 40rem) {
   .del {
     display: flex;
@@ -1561,8 +1502,6 @@ fieldset {
     padding: .375rem .75rem;
   }
 }
-
-/* footer */
 
 .foot {
   margin-top: 4rem;

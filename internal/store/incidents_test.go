@@ -71,7 +71,6 @@ func TestIncidents(t *testing.T) {
 		t.Fatalf("TargetIncidents %+v", list)
 	}
 
-	// beendet vor since faellt raus, offen bleibt drin
 	list, err = s.TargetIncidents(ctx, pub, 10, end.Add(time.Second))
 	if err != nil {
 		t.Fatal(err)

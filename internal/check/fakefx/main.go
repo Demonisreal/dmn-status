@@ -1,9 +1,3 @@
-// fakefx spielt einen FXServer mit /info.json und /players.json nach, damit die
-// Statusseite ohne echten FiveM-Server ausprobiert werden kann.
-//
-//	go run ./internal/check/fakefx -addr 127.0.0.1:30120 -players 12
-//
-// info.json und players.json sind Kopien aus ../testdata, embed kommt nicht ueber ../ hinaus.
 package main
 
 import (
@@ -69,7 +63,6 @@ func delay(h http.Handler, d time.Duration) http.Handler {
 	})
 }
 
-// playerList wiederholt die drei Vorlagen, bis n Spieler zusammen sind
 func playerList(n int) ([]byte, error) {
 	var tmpl []map[string]any
 	if err := json.Unmarshal(players, &tmpl); err != nil {

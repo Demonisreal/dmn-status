@@ -111,7 +111,6 @@ func TestInvalid(t *testing.T) {
 }
 
 func TestMailOptional(t *testing.T) {
-	// so steht es in deploy/env.example, solange MAIL_TO leer ist
 	c, err := load(fromMap(map[string]string{
 		"SMTP_HOST": "smtp.example.com",
 		"SMTP_USER": "resend",

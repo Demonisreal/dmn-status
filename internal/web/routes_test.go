@@ -14,7 +14,6 @@ import (
 	"github.com/Demonisreal/dmn-status/internal/store"
 )
 
-// routeEnv hat ein oeffentliches ziel (1), ein verstecktes (2) und eine gueltige sitzung
 func routeEnv(t *testing.T) (e *env, pub, hidden int64, sid *http.Cookie, token string) {
 	t.Helper()
 	e = newEnv(t, config.Config{}, func(st *store.Store) {
@@ -25,7 +24,6 @@ func routeEnv(t *testing.T) (e *env, pub, hidden int64, sid *http.Cookie, token 
 	return e, pub, hidden, sid, token
 }
 
-// untouched prueft, dass keine admin-aktion durchgelaufen ist
 func untouched(t *testing.T, e *env, id int64, sid *http.Cookie) {
 	t.Helper()
 	ctx := context.Background()
@@ -119,7 +117,6 @@ func TestUncleanPaths(t *testing.T) {
 	e, pub, hidden, sid, token := routeEnv(t)
 	h := strconv.FormatInt(hidden, 10)
 
-	// der mux leitet mit 307 auf den sauberen pfad um, erst dort greifen sitzung und csrf
 	for _, tt := range []struct{ path, location string }{
 		{"//admin/", "/admin/"},
 		{"/admin//", "/admin/"},
@@ -154,7 +151,6 @@ func TestEncodedPaths(t *testing.T) {
 	e, pub, hidden, sid, token := routeEnv(t)
 	h := strconv.FormatInt(hidden, 10)
 
-	// %31 ist dieselbe url wie 1 (RFC 3986, 6.2.2.2), versteckt bleibt versteckt
 	if rec := e.get("/ziel/%" + strconv.FormatInt(0x30+pub, 16)); rec.Code != http.StatusOK {
 		t.Errorf("kodierte oeffentliche id: %d", rec.Code)
 	}
@@ -181,7 +177,6 @@ func TestEncodedPaths(t *testing.T) {
 		})
 	}
 
-	// auch kodiert faengt /admin/ die sitzungspruefung und no-store
 	rec := e.get("/%61dmin/")
 	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/admin/login" {
 		t.Errorf("/%%61dmin/: status %d, Location %q", rec.Code, rec.Header().Get("Location"))

@@ -64,12 +64,9 @@ func (c Checker) checkHTTP(ctx context.Context, t Target) Result {
 	return res
 }
 
-// client baut pro Check einen eigenen Transport ohne Keep-Alive. Jede Messung enthaelt so
-// Verbindungsaufbau und TLS, und connect_to kann pro Ziel den Dial umbiegen.
 func (c Checker) client(connectTo string) *http.Client {
 	dial := dialer(c.loopback, nil, c.Block).DialContext
 	if connectTo != "" {
-		// url, sni und host-header bleiben, nur die tcp-verbindung geht woanders hin
 		dial = func(ctx context.Context, network, _ string) (net.Conn, error) {
 			return c.dialConnectTo(ctx, network, connectTo)
 		}
@@ -89,7 +86,6 @@ func (c Checker) client(connectTo string) *http.Client {
 
 type statusRange struct{ lo, hi int }
 
-// parseStatus versteht "200-399", "200,401" und Mischformen wie "200-299,401".
 func parseStatus(s string) ([]statusRange, error) {
 	var out []statusRange
 	for part := range strings.SplitSeq(s, ",") {

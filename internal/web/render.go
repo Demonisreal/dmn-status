@@ -15,7 +15,6 @@ var files embed.FS
 
 var pages = parse("status", "detail", "login", "admin_list", "admin_form", "notfound", "error")
 
-// jede seite bekommt ein eigenes set, sonst ueberschreiben sich die "main"-bloecke gegenseitig
 func parse(names ...string) map[string]*template.Template {
 	m := make(map[string]*template.Template, len(names))
 	for _, n := range names {
@@ -24,7 +23,6 @@ func parse(names ...string) map[string]*template.Template {
 	return m
 }
 
-// Static enthaelt css, js, icon und grain fuer /static/.
 func Static() fs.FS {
 	sub, err := fs.Sub(files, "static")
 	if err != nil {
@@ -33,8 +31,6 @@ func Static() fs.FS {
 	return sub
 }
 
-// Render schreibt erst, wenn das template komplett durchgelaufen ist. Ein fehler mitten
-// im rendern hinterlaesst so keine halbe seite mit status 200.
 func Render(w http.ResponseWriter, status int, name string, data any) error {
 	body, err := execute(name, data)
 	if err != nil {
