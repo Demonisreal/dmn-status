@@ -121,6 +121,8 @@ go test -count=1 ./...
 golangci-lint run
 ```
 
+Das sind 142 Tests, mit Untertests 400. Sie brauchen keinen Datenbankserver und kein Docker.
+
 Die Oberfläche lässt sich mit Beispieldaten ohne Datenbank ansehen:
 
 ```sh
