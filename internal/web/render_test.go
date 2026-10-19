@@ -106,7 +106,6 @@ func TestRenderPages(t *testing.T) {
 			if strings.Contains(strings.ToLower(out), "javascript:") {
 				t.Errorf("%s #%d: javascript: in der ausgabe", name, i)
 			}
-			// ein fehlender text taucht sonst als schluessel auf
 			if m := regexp.MustCompile(`>(state|overall|how|arch|inc|lat|up|nf)\.[a-z0-9.]+<`).FindString(out); m != "" {
 				t.Errorf("%s #%d: text fehlt: %s", name, i, m)
 			}

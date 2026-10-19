@@ -44,8 +44,8 @@ func TestFiveM(t *testing.T) {
 		playersCode int
 		ok          bool
 		err         string
-		count       int // -1 fuer nil
-		max         int // -1 fuer nil
+		count       int
+		max         int
 	}{
 		{name: "ok", info: info, infoCode: 200, players: players, playersCode: 200, ok: true, count: 3, max: 64},
 		{name: "maxclients als zahl", info: fixture(t, "info_maxclients_number.json"), infoCode: 200,

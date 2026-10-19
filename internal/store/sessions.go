@@ -22,13 +22,11 @@ type Session struct {
 	LastSeen  time.Time
 }
 
-// in der datenbank steht nur der hash, ein geleaktes backup enthaelt so keine gueltigen cookies
 func hashToken(token string) string {
 	sum := sha256.Sum256([]byte(token))
 	return hex.EncodeToString(sum[:])
 }
 
-// CreateSession legt eine Sitzung an. token gehoert ins Cookie und wird nirgends gespeichert.
 func (s *Store) CreateSession(ctx context.Context) (token string, sess Session, err error) {
 	token = rand.Text()
 	now := s.now().Truncate(time.Second).UTC()
@@ -47,7 +45,6 @@ func (s *Store) CreateSession(ctx context.Context) (token string, sess Session, 
 	return token, sess, nil
 }
 
-// Session liefert eine gueltige Sitzung oder ErrNotFound.
 func (s *Store) Session(ctx context.Context, token string) (Session, error) {
 	var sess Session
 	var created, expires, seen int64
@@ -61,8 +58,6 @@ func (s *Store) Session(ctx context.Context, token string) (Session, error) {
 	return sess, err
 }
 
-// TouchSession schiebt den Ablauf um SessionIdle nach hinten, hoechstens bis SessionMax nach
-// dem Login.
 func (s *Store) TouchSession(ctx context.Context, token string) error {
 	return affected(s.w.ExecContext(ctx, `update sessions
 		set last_seen = ?1, expires_at = min(?1 + ?2, created_at + ?3)

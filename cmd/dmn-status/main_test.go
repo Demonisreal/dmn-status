@@ -89,7 +89,6 @@ func TestBootstrap(t *testing.T) {
 	}
 	verify(t, st, "leon", "erstes passwort")
 
-	// bei jedem weiteren start steht die variable vielleicht noch drin, sie darf nichts aendern
 	if err := bootstrap(ctx, st, "jemand", "anderes passwort"); err != nil {
 		t.Fatal(err)
 	}

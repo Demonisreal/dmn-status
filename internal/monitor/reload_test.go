@@ -14,7 +14,6 @@ import (
 	"github.com/Demonisreal/dmn-status/internal/store"
 )
 
-// hanging laesst jeden check haengen, bis sein context endet, und zaehlt gleichzeitige laeufe
 type hanging struct {
 	running, peak atomic.Int32
 	started       chan string
@@ -84,7 +83,6 @@ func TestReloadDuringRunningCheck(t *testing.T) {
 		t.Errorf("%d checks gleichzeitig fuer ein ziel", p)
 	}
 
-	// der abgebrochene check ist weder gespeichert noch gezaehlt noch ein vorfall
 	if list, err := f.st.LastChecks(ctx, id, 10); err != nil || len(list) != 0 {
 		t.Errorf("gespeicherte checks %+v %v", list, err)
 	}
@@ -122,7 +120,6 @@ func TestConcurrentReloads(t *testing.T) {
 		t.Fatalf("%d runner nach parallelen Reloads", n)
 	}
 	h.next(t)
-	// ein alter runner, der noch liefe, haette jetzt einen zweiten check gestartet
 	time.Sleep(100 * time.Millisecond)
 	if p := h.peak.Load(); p != 1 {
 		t.Errorf("%d checks gleichzeitig", p)
@@ -175,8 +172,6 @@ func (m *Manager) runnerCount() int {
 	return len(m.runners)
 }
 
-// der alte ablauf im admin: runner stoppen und DeleteTarget getrennt. Ein Reload dazwischen
-// startet den runner fuer das noch vorhandene ziel neu, und der ueberlebt das loeschen.
 func TestReloadBetweenStopAndDelete(t *testing.T) {
 	f := newFake(t)
 	f.ok.Store(true)
@@ -211,7 +206,6 @@ func TestDelete(t *testing.T) {
 	if err := m.Delete(ctx, id); err != nil {
 		t.Fatal(err)
 	}
-	// vor dem naechsten Reload pruefen, das wuerde einen uebrigen runner selbst stoppen
 	if n := m.runnerCount(); n != 0 {
 		t.Fatalf("%d runner nach Delete", n)
 	}
@@ -229,7 +223,6 @@ func TestDelete(t *testing.T) {
 	}
 }
 
-// scheitert das loeschen, bleibt das ziel in der datenbank und muss weiter geprueft werden
 func TestDeleteFailedRestartsRunner(t *testing.T) {
 	f := newFake(t)
 	f.ok.Store(true)

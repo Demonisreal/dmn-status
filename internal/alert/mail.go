@@ -10,14 +10,11 @@ import (
 	"time"
 	"unicode"
 
-	// im docker-image gibt es keine zoneinfo, ohne das faellt LoadLocation auf UTC
 	_ "time/tzdata"
 )
 
 var berlin, _ = time.LoadLocation("Europe/Berlin")
 
-// clean nimmt steuer- und formatzeichen raus. Mit CRLF koennte ein zielname eigene header
-// anhaengen, mit U+202E den betreff optisch umdrehen.
 func clean(s string) string {
 	return strings.Map(func(r rune) rune {
 		if unicode.IsControl(r) || unicode.Is(unicode.Cf, r) {
@@ -31,7 +28,6 @@ func clock(t time.Time) string {
 	return t.In(berlin).Format("02.01.2006, 15:04 Uhr")
 }
 
-// dauer rundet ab, eine Mail sagt "12 Min." und nicht "12 Min. 41 Sek."
 func dauer(d time.Duration) string {
 	switch {
 	case d < time.Minute:
@@ -71,8 +67,6 @@ func (m *Mailer) link() string {
 	return "\n" + m.BaseURL + "/admin/\n"
 }
 
-// message baut die komplette Nachricht mit CRLF. id und date kommen von aussen, damit der
-// Test eine feste Ausgabe vergleichen kann.
 func (m *Mailer) message(from *mail.Address, subject, body, id string, date time.Time) ([]byte, error) {
 	domain := from.Address[strings.LastIndexByte(from.Address, '@')+1:]
 	to := make([]string, len(m.To))
@@ -90,7 +84,6 @@ func (m *Mailer) message(from *mail.Address, subject, body, id string, date time
 	buf.WriteString("Content-Type: text/plain; charset=utf-8\r\n")
 	buf.WriteString("Content-Transfer-Encoding: quoted-printable\r\n\r\n")
 
-	// der writer macht aus \n ein CRLF und bricht lange zeilen um
 	qp := quotedprintable.NewWriter(&buf)
 	if _, err := qp.Write([]byte(body)); err != nil {
 		return nil, err

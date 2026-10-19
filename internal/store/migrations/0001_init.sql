@@ -1,5 +1,3 @@
--- zeiten ueberall als unix-sekunden in utc
-
 create table targets (
   id             integer primary key,
   name           text    not null,

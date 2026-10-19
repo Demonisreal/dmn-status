@@ -8,13 +8,11 @@ import (
 	"strings"
 	"time"
 
-	// im docker-image gibt es keine zoneinfo, ohne das faellt LoadLocation auf UTC
 	_ "time/tzdata"
 )
 
 var berlin, _ = time.LoadLocation("Europe/Berlin")
 
-// admin gibt es nur auf deutsch, die adm.-schluessel fehlen deshalb im englischen teil
 var texts = map[string]map[string]string{
 	"de": {
 		"meta.desc":     "Verfügbarkeit und Vorfälle der Dienste von DMN Software, gemessen von einem eigenen Go-Dienst.",
@@ -228,8 +226,6 @@ var texts = map[string]map[string]string{
 	},
 }
 
-// T liefert den text fuer lang, faellt auf deutsch zurueck und zeigt sonst den schluessel,
-// damit ein vergessener eintrag in der vorschau auffaellt statt leer zu bleiben.
 func T(lang, key string) string {
 	if s, ok := texts[lang][key]; ok {
 		return s
@@ -257,8 +253,6 @@ func Funcs() template.FuncMap {
 	}
 }
 
-// pct rundet ab, 99,996 % darf nicht als 100 % erscheinen. Immer zwei nachkommastellen,
-// sonst stehen 99,7 und 99,95 in der rechtsbuendigen spalte versetzt.
 func pct(lang string, v float64) string {
 	if v < 0 {
 		return "–"
@@ -321,7 +315,6 @@ func when(lang string, t time.Time) string {
 	return t.In(berlin).Format("02.01., 15:04")
 }
 
-// span laesst das datum am ende weg, wenn der vorfall am selben tag endete
 func span(lang string, from, to time.Time) string {
 	end := when(lang, to)
 	if from.In(berlin).Format(time.DateOnly) == to.In(berlin).Format(time.DateOnly) {
@@ -330,7 +323,6 @@ func span(lang string, from, to time.Time) string {
 	return fmt.Sprintf(T(lang, "inc.span"), when(lang, from), end)
 }
 
-// base ist das pfadpraefix der sprache, deutsch liegt unter /
 func base(lang string) string {
 	if lang == "en" {
 		return "/en"

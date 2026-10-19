@@ -17,8 +17,6 @@ import (
 	"github.com/Demonisreal/dmn-status/internal/store"
 )
 
-// row baut die zeile eines ziels. Zustand, spieler und antwortzeit kommen aus dem letzten
-// check in der datenbank, der snapshot des monitors kennt keine spielerzahl.
 func (s *server) row(ctx context.Context, t check.Target, hours int, lang string) (TargetRow, store.Check, error) {
 	r := TargetRow{ID: t.ID, Name: t.Name, Kind: t.Kind, State: StateUnknown}
 	var last store.Check
@@ -57,7 +55,6 @@ func (s *server) row(ctx context.Context, t check.Target, hours int, lang string
 	return r, last, nil
 }
 
-// cells fasst je n stunden zu einer zelle zusammen, fuer 30 tage n = 24
 func cells(hours []store.Hour, n int) []HourCell {
 	out := make([]HourCell, 0, len(hours)/n)
 	for i := 0; i+n <= len(hours); i += n {
@@ -144,7 +141,6 @@ type cached struct {
 	at   time.Time
 }
 
-// defer, weil eine panic im template den eintrag sonst fuer immer sperrt
 func (c *cached) get(now func() time.Time, build func() ([]byte, error)) ([]byte, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -158,9 +154,6 @@ func (c *cached) get(now func() time.Time, build func() ([]byte, error)) ([]byte
 	return c.body, nil
 }
 
-// fromCache liefert fuer key hoechstens cacheTTL alte bytes aus. Kommen viele aufrufe
-// gleichzeitig, rechnet nur einer, die anderen warten am mutex des eintrags. Fehler landen
-// nicht im cache.
 func (s *server) fromCache(w http.ResponseWriter, r *http.Request, key, ctype string, build func() ([]byte, error)) {
 	s.cacheMu.Lock()
 	c := s.cache[key]
@@ -181,8 +174,6 @@ func (s *server) fromCache(w http.ResponseWriter, r *http.Request, key, ctype st
 	w.Write(body)
 }
 
-// clearCache wirft alle eintraege weg. Nach einer aenderung an den zielen soll ein gerade
-// intern gestelltes ziel nicht noch bis zu cacheTTL oeffentlich zu sehen sein.
 func (s *server) clearCache() {
 	s.cacheMu.Lock()
 	clear(s.cache)
@@ -191,8 +182,6 @@ func (s *server) clearCache() {
 
 func (s *server) status(w http.ResponseWriter, r *http.Request, lang string) {
 	s.fromCache(w, r, "status/"+lang, "text/html; charset=utf-8", func() ([]byte, error) {
-		// die berechnung teilen sich alle wartenden, ein abbruch des ersten clients darf sie
-		// nicht fuer die anderen scheitern lassen
 		ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 10*time.Second)
 		defer cancel()
 		targets, err := s.Store.PublicTargets(ctx)
@@ -224,10 +213,10 @@ func (s *server) status(w http.ResponseWriter, r *http.Request, lang string) {
 
 type period struct {
 	dur   time.Duration
-	hours int // stunden fuer die leiste
-	group int // stunden je segment
+	hours int
+	group int
 	step  time.Duration
-	slots int // punkte der antwortzeit, passend zu den schritten in store.Latency
+	slots int
 }
 
 var periods = map[string]period{
@@ -293,8 +282,6 @@ func (s *server) detail(w http.ResponseWriter, r *http.Request, lang string) {
 	})
 }
 
-// slots verteilt die punkte auf feste schritte ueber den zeitraum, schritte ohne messung
-// bleiben -1 und werden im diagramm zur luecke
 func slots(points []store.Point, now time.Time, dur time.Duration, n int) []int {
 	step := dur / time.Duration(n)
 	first := now.Truncate(step).Add(-time.Duration(n-1) * step)
@@ -359,7 +346,6 @@ func (s *server) api(w http.ResponseWriter, r *http.Request) {
 var labelEscape = strings.NewReplacer(`\`, `\\`, `"`, `\"`, "\n", `\n`)
 
 func (s *server) metrics(w http.ResponseWriter, r *http.Request) {
-	// ueber den hash vergleichen, ConstantTimeCompare verraet sonst die laenge des tokens
 	got, found := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
 	a, b := sha256.Sum256([]byte(got)), sha256.Sum256([]byte(s.Config.MetricsToken))
 	if !found || got == "" || subtle.ConstantTimeCompare(a[:], b[:]) != 1 {

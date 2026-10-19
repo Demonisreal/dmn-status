@@ -1,5 +1,3 @@
-// Package alert verschickt die Mails bei Ausfall und Wiederkehr. Nur implizites TLS (Port 465):
-// ein server ohne TLS scheitert schon beim handshake, klartext gibt es nicht.
 package alert
 
 import (
@@ -18,8 +16,7 @@ import (
 var ErrLimit = errors.New("mail-limit erreicht")
 
 const (
-	perHour = 20
-	// eigenes budget, oft gedrueckte testmails sollen keine ausfall-mails verdraengen
+	perHour     = 20
 	perHourTest = 3
 	dialTimeout = 15 * time.Second
 	sendTimeout = 30 * time.Second
@@ -32,8 +29,8 @@ type Mailer struct {
 	Pass    string
 	From    string
 	To      []string
-	BaseURL string      // fuer den link in der mail, darf leer sein
-	TLS     *tls.Config // nil heisst systemzertifikate, im test nur RootCAs
+	BaseURL string
+	TLS     *tls.Config
 	Now     func() time.Time
 
 	mu       sync.Mutex
@@ -41,13 +38,11 @@ type Mailer struct {
 	sentTest []time.Time
 }
 
-// Down meldet einen Ausfall seit since.
 func (m *Mailer) Down(ctx context.Context, name, cause string, since time.Time) error {
 	subject, body := m.downText(name, cause, since)
 	return m.send(ctx, false, subject, body)
 }
 
-// Up meldet die Wiederkehr nach einem Ausfall von from bis to.
 func (m *Mailer) Up(ctx context.Context, name string, from, to time.Time) error {
 	subject, body := m.upText(name, from, to)
 	return m.send(ctx, false, subject, body)
@@ -57,8 +52,6 @@ func (m *Mailer) Test(ctx context.Context) error {
 	return m.send(ctx, true, "[dmn-status] Testmail", "Mailversand von dmn-status funktioniert.\n")
 }
 
-// reserve zaehlt versuche, nicht zugestellte mails. Ein haengender server soll nicht dazu
-// fuehren, dass bei jedem check neu verbunden wird.
 func (m *Mailer) reserve(test bool) error {
 	now := m.Now()
 	m.mu.Lock()
@@ -104,8 +97,6 @@ func (m *Mailer) send(ctx context.Context, test bool, subject, body string) erro
 	if err != nil {
 		return err
 	}
-	// die frist gilt fuer die ganze sitzung, net/smtp selbst kennt keine timeouts.
-	// echte uhr, Now kann im test stehen.
 	if err := conn.SetDeadline(time.Now().Add(sendTimeout)); err != nil {
 		conn.Close()
 		return err
@@ -143,7 +134,6 @@ func (m *Mailer) send(ctx context.Context, test bool, subject, body string) erro
 	if err := w.Close(); err != nil {
 		return err
 	}
-	// nach dem 250 auf DATA ist die mail angenommen, ein fehler beim QUIT aendert daran nichts
 	_ = c.Quit()
 	return nil
 }

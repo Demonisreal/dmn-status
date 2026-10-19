@@ -9,13 +9,12 @@ import (
 func TestNext(t *testing.T) {
 	base := time.Date(2026, 3, 10, 12, 0, 0, 0, time.UTC)
 
-	// checks: x fehler, . erfolg, einer pro minute. events: - nichts, d down, u up
 	tests := []struct {
 		name      string
 		threshold int
 		checks    string
 		events    string
-		started   int // minute des ersten fehlers beim letzten down
+		started   int
 		dur       time.Duration
 	}{
 		{"einzelfehler_unter_schwelle", 3, "x.x.xx.", "-------", 0, 0},

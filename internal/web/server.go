@@ -21,7 +21,7 @@ import (
 type Deps struct {
 	Store   *store.Store
 	Monitor *monitor.Manager
-	Mailer  *alert.Mailer // nil ohne smtp
+	Mailer  *alert.Mailer
 	Config  config.Config
 	Version string
 	Now     func() time.Time
@@ -34,7 +34,6 @@ type server struct {
 	Deps
 	sid, lcsrf, dev string
 
-	// argon2 braucht 19 MiB je lauf, mehr als zwei gleichzeitig vertraegt der container nicht
 	verify chan struct{}
 	limit  *limiter
 
@@ -56,7 +55,6 @@ func newServer(d Deps) *server {
 		limit:  newLimiter(),
 		cache:  map[string]*cached{},
 	}
-	// __Host- verlangt Secure, ohne https wuerde der browser das cookie verwerfen
 	if d.Config.CookieSecure {
 		s.sid, s.lcsrf, s.dev = "__Host-sid", "__Host-lcsrf", "__Host-dev"
 	}
@@ -113,7 +111,6 @@ func (s *server) headers(next http.Handler) http.Handler {
 		case p == "/admin" || strings.HasPrefix(p, "/admin/"), p == "/metrics", p == "/healthz":
 			h.Set("Cache-Control", "no-store")
 		case strings.HasPrefix(p, "/static/"):
-			// setzt static selbst, je nach ?v=
 		default:
 			h.Set("Cache-Control", "no-cache")
 		}
@@ -182,7 +179,6 @@ func (s *server) errorPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// fail loggt den fehler und zeigt die 500-seite. Der client sieht nie err.Error().
 func (s *server) fail(w http.ResponseWriter, r *http.Request, err error) {
 	if errors.Is(err, context.Canceled) && r.Context().Err() != nil {
 		return
@@ -197,7 +193,6 @@ func (s *server) render(w http.ResponseWriter, r *http.Request, status int, name
 	}
 }
 
-// pathID akzeptiert nur die kanonische schreibweise, "+7" oder "007" waeren sonst dieselbe seite
 func pathID(r *http.Request) (int64, bool) {
 	v := r.PathValue("id")
 	id, err := strconv.ParseInt(v, 10, 64)
@@ -226,10 +221,7 @@ var staticTypes = map[string]string{
 	".svg": "image/svg+xml",
 }
 
-// Die mime-tabelle kommt unter windows teils aus der registry, dort ist .js gern text/plain.
-// Mit nosniff laedt der browser das skript dann nicht, deshalb die feste liste.
 func (s *server) static(w http.ResponseWriter, r *http.Request) {
-	// headers laesst /static/ aus, ohne das haette auch die 404 keinen Cache-Control
 	h := w.Header()
 	h.Set("Cache-Control", "no-cache")
 
@@ -255,7 +247,7 @@ func (s *server) static(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Has("v") {
 		h.Set("Cache-Control", "public, max-age=31536000, immutable")
 	}
-	http.ServeFileFS(w, r, staticFS, name) //nolint:gosec // embed-fs, Open oben prueft name schon per fs.ValidPath
+	http.ServeFileFS(w, r, staticFS, name) //nolint:gosec
 }
 
 var staticFS = Static()

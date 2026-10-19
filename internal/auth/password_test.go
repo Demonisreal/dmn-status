@@ -37,7 +37,6 @@ func TestHashVerify(t *testing.T) {
 }
 
 func TestVerifyOtherParams(t *testing.T) {
-	// ein hash mit kleineren parametern muss trotz anderer konstanten pruefbar bleiben
 	salt := []byte("saltsaltsalt")
 	key := argon2.IDKey([]byte("geheim"), salt, 1, 64, 1, 24)
 	h := "$argon2id$v=19$m=64,t=1,p=1$" + b64.EncodeToString(salt) + "$" + b64.EncodeToString(key)
@@ -88,7 +87,6 @@ func TestVerifyBadHash(t *testing.T) {
 		}
 	}
 
-	// gueltiges format, aber ein bit im hash gekippt
 	key, _ := b64.DecodeString(parts[5])
 	key[0] ^= 1
 	if ok, err := Verify("geheim", with(5, b64.EncodeToString(key))); ok || err != nil {
@@ -100,7 +98,6 @@ func TestDummyVerify(t *testing.T) {
 	if _, err := Verify("x", dummyHash); err != nil {
 		t.Fatalf("dummyHash ungueltig: %v", err)
 	}
-	// aendern sich die konstanten, muss dummyHash neu erzeugt werden, sonst misst er etwas anderes
 	parts := strings.Split(dummyHash, "$")
 	salt, _ := b64.DecodeString(parts[4])
 	key, _ := b64.DecodeString(parts[5])

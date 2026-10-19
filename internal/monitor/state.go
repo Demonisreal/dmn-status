@@ -1,4 +1,3 @@
-// Package monitor startet die Checks je Ziel und macht aus den Ergebnissen Vorfaelle und Mails.
 package monitor
 
 import "time"
@@ -18,11 +17,9 @@ type state struct {
 
 	open      bool
 	startedAt time.Time
-	incident  int64 // id in der datenbank, setzt der aufrufer
+	incident  int64
 }
 
-// next rechnet den Zustand nach einem Check weiter. Bei up bleibt startedAt stehen, die Dauer
-// ist dann at - startedAt.
 func next(s state, ok bool, cause string, at time.Time, threshold int) (state, event) {
 	if ok {
 		s.fails, s.firstFail, s.cause = 0, time.Time{}, ""
@@ -38,8 +35,6 @@ func next(s state, ok bool, cause string, at time.Time, threshold int) (state, e
 	}
 	s.fails++
 	s.cause = cause
-	// >= statt ==: nach einem Reload mit kleinerer Schwelle oder wenn das Eroeffnen in der
-	// Datenbank gescheitert ist, soll der naechste Fehler den Vorfall noch oeffnen
 	if !s.open && s.fails >= threshold {
 		s.open = true
 		s.startedAt = s.firstFail

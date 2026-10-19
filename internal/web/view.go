@@ -2,9 +2,6 @@ package web
 
 import "time"
 
-// Die Structs hier sind alles, was die Templates zu sehen bekommen. Handler bauen sie aus
-// dem Store, die Vorschau im Dev-Modus aus festen Beispieldaten.
-
 type State string
 
 const (
@@ -16,14 +13,14 @@ const (
 
 type Page struct {
 	Title     string
-	Lang      string // de oder en, admin immer de
-	AltURL    string // gleiche seite in der anderen sprache, leer im admin
-	Path      string // fuer aria-current in der navigation
-	Version   string // haengt als ?v= an css und js
-	CSRF      string // leer auf oeffentlichen seiten
+	Lang      string
+	AltURL    string
+	Path      string
+	Version   string
+	CSRF      string
 	Admin     bool
 	Flash     string
-	FlashWarn bool // die aktion ist nicht durchgelaufen, z. b. testmail fehlgeschlagen
+	FlashWarn bool
 }
 
 type StatusPage struct {
@@ -37,14 +34,14 @@ type StatusPage struct {
 type TargetRow struct {
 	ID        int64
 	Name      string
-	Kind      string // http, tcp, fivem
+	Kind      string
 	State     State
-	Uptime24h float64 // 0..1, -1 wenn keine daten
+	Uptime24h float64
 	Uptime7d  float64
 	Uptime30d float64
 	LatencyMs int
 	Players   *Players
-	Hours     []HourCell // letzte 90 stunden, aelteste zuerst
+	Hours     []HourCell
 	Spark     Chart
 }
 
@@ -55,8 +52,7 @@ type Players struct {
 }
 
 type HourCell struct {
-	Start time.Time
-	// State ist unknown, wenn in der stunde nicht geprueft wurde
+	Start  time.Time
 	State  State
 	Uptime float64
 }
@@ -67,24 +63,23 @@ type IncidentRow struct {
 	StartedAt  time.Time
 	EndedAt    *time.Time
 	Duration   time.Duration
-	Cause      string // nur im admin befuellt
+	Cause      string
 }
 
 type DetailPage struct {
 	Page
 	Target    TargetRow
-	Range     string // 24h, 7d, 30d
+	Range     string
 	Latency   Chart
 	Incidents []IncidentRow
 }
 
-// Chart ist schon fertig gerechnet, das Template setzt nur noch Attribute.
 type Chart struct {
 	Width, Height int
-	Line          string // d fuer <path>, bricht bei luecken ab
+	Line          string
 	Bars          []Bar
 	MaxMs         int
-	Label         string // aria-label
+	Label         string
 }
 
 type Bar struct {
@@ -102,7 +97,7 @@ type LoginPage struct {
 type AdminListPage struct {
 	Page
 	Targets []AdminTargetRow
-	MailOK  bool // smtp konfiguriert
+	MailOK  bool
 }
 
 type AdminTargetRow struct {
@@ -116,7 +111,7 @@ type AdminTargetRow struct {
 
 type TargetForm struct {
 	Page
-	ID            int64 // 0 beim anlegen
+	ID            int64
 	Name          string
 	Kind          string
 	Address       string
@@ -128,5 +123,5 @@ type TargetForm struct {
 	FailThreshold int
 	Public        bool
 	Paused        bool
-	Errors        map[string]string // feldname -> meldung
+	Errors        map[string]string
 }

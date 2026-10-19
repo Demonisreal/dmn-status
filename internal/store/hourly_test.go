@@ -21,12 +21,12 @@ func TestRollupHourBoundaries(t *testing.T) {
 	h12, h11 := h13.Add(-time.Hour), h13.Add(-2*time.Hour)
 
 	for _, at := range []time.Time{
-		h11.Add(-time.Second), // vor dem fenster
+		h11.Add(-time.Second),
 		h11,
 		h12.Add(-time.Second),
 		h12,
 		h13.Add(-time.Second),
-		h13, // laufende stunde
+		h13,
 	} {
 		addCheck(t, s, id, at, check.Result{OK: true, LatencyMs: 10})
 	}
@@ -60,7 +60,6 @@ func TestRollupHourBoundaries(t *testing.T) {
 		t.Errorf("zellen nach dem rollup %+v", cells)
 	}
 
-	// ein check, der vor 13 uhr gestartet und erst danach geschrieben wurde
 	addCheck(t, s, id, h13.Add(-2*time.Second), check.Result{LatencyMs: 10000})
 	clock.Set(h13.Add(59*time.Minute + 59*time.Second))
 	if err := s.Rollup(ctx); err != nil {
@@ -70,7 +69,6 @@ func TestRollupHourBoundaries(t *testing.T) {
 		t.Errorf("nachzuegler: %d checks in 12 uhr, want 3", got)
 	}
 
-	// zwei stunden spaeter faellt 12 uhr aus dem fenster und bleibt, wie es war
 	addCheck(t, s, id, h12.Add(30*time.Minute), check.Result{OK: true})
 	clock.Set(h13.Add(2 * time.Hour))
 	if err := s.Rollup(ctx); err != nil {
@@ -93,7 +91,7 @@ func TestUptimeWithPauses(t *testing.T) {
 	tests := []struct {
 		name   string
 		hourly []row
-		raw    []bool // checks in der laufenden stunde
+		raw    []bool
 		want   Uptime
 	}{
 		{
@@ -138,7 +136,6 @@ func TestUptimeWithPauses(t *testing.T) {
 				t.Fatalf("uptime %+v, want %+v", before, tt.want)
 			}
 
-			// das pausieren selbst aendert an der zahl nichts
 			if err := s.SetPaused(ctx, id, true); err != nil {
 				t.Fatal(err)
 			}

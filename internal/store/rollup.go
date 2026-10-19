@@ -15,7 +15,7 @@ func hourStart(t time.Time) int64 {
 
 type stats struct {
 	total, ok int
-	lat       []int // nur erfolgreiche checks, ein timeout ist keine antwortzeit
+	lat       []int
 }
 
 func (st *stats) add(ok bool, latency int) {
@@ -26,7 +26,6 @@ func (st *stats) add(ok bool, latency int) {
 	}
 }
 
-// latency liefert Mittel, p95 (nearest rank) und Maximum.
 func (st *stats) latency() (avg, p95, maxMs int) {
 	n := len(st.lat)
 	if n == 0 {
@@ -40,9 +39,6 @@ func (st *stats) latency() (avg, p95, maxMs int) {
 	return sum / n, st.lat[(95*n+99)/100-1], st.lat[n-1]
 }
 
-// Rollup verdichtet die beiden letzten abgeschlossenen Stunden in hourly. Die vorletzte ist
-// dabei, weil ein Check mit dem Zeitstempel seines Starts erst nach dem Stundenwechsel
-// geschrieben wird und weil ein ausgefallener Lauf sonst eine Luecke hinterlaesst.
 func (s *Store) Rollup(ctx context.Context) error {
 	cur := hourStart(s.now())
 	from := cur - 2*hour
@@ -81,7 +77,6 @@ func (s *Store) Rollup(ctx context.Context) error {
 		return err
 	}
 
-	// der writer hat nur eine verbindung, rows muss vor dem ersten insert zu sein
 	for _, k := range keys {
 		st := buckets[k]
 		avg, p95, maxMs := st.latency()
@@ -95,14 +90,10 @@ func (s *Store) Rollup(ctx context.Context) error {
 	return tx.Commit()
 }
 
-// Uptime enthaelt Anteile zwischen 0 und 1, -1 heisst keine Daten im Zeitraum.
 type Uptime struct {
 	Day, Week, Month float64
 }
 
-// Uptime rechnet aus hourly plus den rohen Checks der laufenden Stunde, sonst haengt die
-// Zahl bis zu einer Stunde hinterher. Die laufende Stunde zaehlt als eine der 24, 168 oder
-// 720 Stunden.
 func (s *Store) Uptime(ctx context.Context, targetID int64) (Uptime, error) {
 	cur := hourStart(s.now())
 	var dayT, dayOK, weekT, weekOK, monthT, monthOK int
@@ -144,14 +135,11 @@ func ratio(ok, total int) float64 {
 	return float64(ok) / float64(total)
 }
 
-// Hour ist eine Zelle der Stundenleiste. Total 0 heisst, in der Stunde lief kein Check.
 type Hour struct {
 	Start     time.Time
 	Total, OK int
 }
 
-// Hours liefert die letzten n Stunden, aelteste zuerst. Die letzte Zelle ist die laufende
-// Stunde aus den rohen Checks.
 func (s *Store) Hours(ctx context.Context, targetID int64, n int) ([]Hour, error) {
 	cur := hourStart(s.now())
 	first := cur - int64(n-1)*hour
@@ -189,9 +177,6 @@ type Point struct {
 	Avg, P95, Max int
 }
 
-// Latency liefert die Antwortzeiten der erfolgreichen Checks. Bis 24 Stunden aus den rohen
-// Checks in 10-Minuten-Schritten, darueber aus hourly. Schritte ohne Daten fehlen, die
-// Luecke soll im Diagramm sichtbar bleiben.
 func (s *Store) Latency(ctx context.Context, targetID int64, span time.Duration) ([]Point, error) {
 	since := s.now().Add(-span).Unix()
 	if span > 24*time.Hour {
