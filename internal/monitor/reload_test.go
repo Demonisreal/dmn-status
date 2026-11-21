@@ -232,7 +232,7 @@ func TestDeleteFailedRestartsRunner(t *testing.T) {
 	f.call()
 	ctx := context.Background()
 
-	db, err := sql.Open("sqlite", "file:"+filepath.ToSlash(f.path))
+	db, err := sql.Open("sqlite", "file:"+filepath.ToSlash(f.path)+"?_pragma=busy_timeout(5000)")
 	if err != nil {
 		t.Fatal(err)
 	}
