@@ -10,6 +10,17 @@
 <meta name="robots" content="noindex">
 {{- else}}
 <meta name="description" content="{{t .Lang "meta.desc"}}">
+<meta property="og:site_name" content="DMN Software">
+<meta property="og:title" content="{{with .Title}}{{.}} · {{end}}DMN Software">
+<meta property="og:description" content="{{t .Lang "meta.desc"}}">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="{{if eq .Lang "en"}}en_US{{else}}de_DE{{end}}">
+<meta property="og:image" content="{{t .Lang "meta.img"}}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{t .Lang "meta.imgalt"}}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{t .Lang "meta.img"}}">
 {{- end}}
 {{- block "head" .}}{{end}}
 <link rel="icon" href="/static/icon.svg?v={{.Version}}" type="image/svg+xml">

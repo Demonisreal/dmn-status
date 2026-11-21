@@ -16,6 +16,8 @@ var berlin, _ = time.LoadLocation("Europe/Berlin")
 var texts = map[string]map[string]string{
 	"de": {
 		"meta.desc":     "Verfügbarkeit und Vorfälle der Dienste von DMN Software, gemessen von einem eigenen Go-Dienst.",
+		"meta.img":      "https://dmn-software.com/assets/og-status.png",
+		"meta.imgalt":   "Karte mit dem Logo von DMN Software, Titel Statusdienst und einem Bildschirmfoto der Statusseite",
 		"skip":          "Zum Inhalt",
 		"main.id":       "inhalt",
 		"nav.label":     "Abschnitte",
@@ -127,6 +129,8 @@ var texts = map[string]map[string]string{
 	},
 	"en": {
 		"meta.desc":     "Availability and incidents of the DMN Software services, measured by a small Go service.",
+		"meta.img":      "https://dmn-software.com/assets/og-status-en.png",
+		"meta.imgalt":   "Card with the DMN Software logo, the title Status monitor and a screenshot of the status page",
 		"skip":          "Skip to content",
 		"main.id":       "content",
 		"nav.label":     "Sections",
